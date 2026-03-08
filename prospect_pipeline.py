@@ -226,8 +226,8 @@ def verify_emails(contacts, dry_run=False):
 def touch1(c):
     return (
         f"{c['hook']}.\n\n"
-        f"We only do one thing - Reddit Ads for SaaS. "
-        f"I can put together a quick Reddit opportunity audit for {c['company']} if that's useful."
+        f"We run Reddit Ads for SaaS - I put together a quick Loom showing an untapped "
+        f"Reddit opportunity for {c['company']}. Want me to send it over?"
     )
 
 def touch2(c):
