@@ -40,7 +40,7 @@ def get_instantly_headers():
         "Authorization": f"Bearer {INSTANTLY_API_KEY}",
     }
 
-CAMPAIGN_NAME = "SaaS Reddit Ads - Initial Prospecting (March 2026)"
+CAMPAIGN_NAME = "SaaS Reddit Ads - Loom CTA (March 2026)"
 
 # ── MV Result Codes ──
 MV_RESULTS = {1: "ok", 2: "catch_all", 3: "unknown", 4: "error", 5: "disposable", 6: "invalid"}
