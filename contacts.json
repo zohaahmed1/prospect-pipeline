@@ -1,0 +1,442 @@
+[
+  {
+    "first_name": "Beau",
+    "last_name": "Vasquez",
+    "email": "beau.vasquez@gong.io",
+    "company": "Gong",
+    "domain": "gong.io",
+    "title": "VP Demand Generation",
+    "hook": "Gong's biggest growth friction right now isn't product - it's mid-market buyers who stall at pricing. Those same buyers are on r/sales asking 'is Gong worth the contract?' before they ever book a demo",
+    "reddit_fit": "the buying conversation is happening in r/sales and r/techsales threads where revenue leaders compare tools before shortlisting - that intent is capturable with paid"
+  },
+  {
+    "first_name": "Malinda",
+    "last_name": "Sandman",
+    "email": "malinda.sandman@typeform.com",
+    "company": "Typeform",
+    "domain": "typeform.com",
+    "title": "VP Marketing",
+    "hook": "Typeform's free-tier ceiling is pushing marketers to evaluate alternatives - and those evaluation conversations are happening live on r/marketing where 1.3M members compare form builders",
+    "reddit_fit": "the 'Typeform vs Jotform vs Tally' debate runs weekly on r/marketing and r/digital_marketing - your buyers are there mid-decision before they ever hit your pricing page"
+  },
+  {
+    "first_name": "Ben",
+    "last_name": "Aronsten",
+    "email": "ben.aronsten@paddle.com",
+    "company": "Paddle",
+    "domain": "paddle.com",
+    "title": "VP Marketing",
+    "hook": "SaaS founders choosing billing infrastructure are terrified of account suspensions - and the 'Paddle vs Stripe' horror story threads on r/SaaS are where that fear gets validated or resolved",
+    "reddit_fit": "r/SaaS and r/startups (1.9M members) host recurring billing-platform threads where founders share real migration experiences - Paddle can own that narrative with paid"
+  },
+  {
+    "first_name": "Rahul",
+    "last_name": "Yadav",
+    "email": "rahul@miro.com",
+    "company": "Miro",
+    "domain": "miro.com",
+    "title": "CMO",
+    "hook": "FigJam is eating Miro's lunch at a third of the price - and the product managers making that switch are talking about it openly on r/ProductManagement",
+    "reddit_fit": "r/ProductManagement and r/agile host weekly 'Miro vs FigJam' threads where PMs share real cost comparisons - that's where Miro can reframe the value conversation"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Holden",
+    "email": "scott.holden@vanta.com",
+    "company": "Vanta",
+    "domain": "vanta.com",
+    "title": "CMO",
+    "hook": "Vanta wins on speed but loses on flexibility - and that exact tradeoff is being debated by YC founders on r/startups every time someone asks 'Vanta or Drata?'",
+    "reddit_fit": "r/startups (1.9M) and r/cybersecurity host compliance-platform threads where startup CTOs weigh speed vs customization - Vanta can shape that decision with the right placement"
+  },
+  {
+    "first_name": "Archana",
+    "last_name": "Agrawal",
+    "email": "archana.agrawal@intercom.io",
+    "company": "Intercom",
+    "domain": "intercom.io",
+    "title": "President",
+    "hook": "Intercom's per-conversation pricing is the #1 objection support teams raise before churning - and that frustration is being voiced in real time on r/customerservice",
+    "reddit_fit": "r/customerservice and r/SaaS host active support-platform threads where buyers compare pricing models - Intercom can get ahead of the pricing objection with the right message"
+  },
+  {
+    "first_name": "Matt",
+    "last_name": "Epstein",
+    "email": "mepstein@rippling.com",
+    "company": "Rippling",
+    "domain": "rippling.com",
+    "title": "GM",
+    "hook": "Rippling's all-in-one model is either a superpower or overkill depending on who you ask - and HR leaders on r/humanresources are split on exactly that question",
+    "reddit_fit": "r/humanresources hosts recurring HR-platform threads where people ops leaders debate bundled vs best-of-breed - Rippling can win the 'all-in-one is worth it' argument with paid"
+  },
+  {
+    "first_name": "Melton",
+    "last_name": "Littlepage",
+    "email": "melton.littlepage@1password.com",
+    "company": "1Password",
+    "domain": "1password.com",
+    "title": "CMO",
+    "hook": "Bitwarden's open-source story is pulling security-conscious buyers away from 1Password - and that narrative is being shaped on r/cybersecurity where 700K IT admins compare options",
+    "reddit_fit": "r/cybersecurity and r/sysadmin host weekly password-manager threads where IT leaders debate open-source vs enterprise polish - 1Password can reframe that conversation"
+  },
+  {
+    "first_name": "Hossain",
+    "last_name": "Raj",
+    "email": "nick@webflow.com",
+    "company": "Webflow",
+    "domain": "webflow.com",
+    "title": "CMO",
+    "hook": "Webflow's learning curve is the #1 reason developers recommend Framer instead - and that recommendation is happening on r/webdev where your next customers research tools",
+    "reddit_fit": "r/webdev and r/nocode host recurring 'Webflow vs Framer' threads where builders share real learning-curve experiences - that objection is addressable with paid placement"
+  },
+  {
+    "first_name": "Arun",
+    "last_name": "Singh",
+    "email": "arun@drata.com",
+    "company": "Drata",
+    "domain": "drata.com",
+    "title": "CMO",
+    "hook": "Drata wins on automation depth but Vanta wins on brand recognition - and that gap is visible on r/devops where technical buyers choose compliance platforms",
+    "reddit_fit": "r/devops (347K) and r/startups host active Vanta vs Drata threads where technical buyers compare customization - Drata can close the awareness gap with Reddit Ads"
+  },
+  {
+    "first_name": "Jamal",
+    "last_name": "Miller",
+    "email": "jamal.miller@calendly.com",
+    "company": "Calendly",
+    "domain": "calendly.com",
+    "title": "VP Brand & Product Marketing",
+    "hook": "Cal.com's free open-source alternative is chipping away at Calendly's bottom of funnel - and the switching conversation is playing out on r/sales where SDRs compare scheduling tools",
+    "reddit_fit": "r/sales (510K) and r/productivity host recurring scheduling-tool threads where reps evaluate free vs paid options - Calendly can defend that ground with targeted ads"
+  },
+  {
+    "first_name": "Craig",
+    "last_name": "Cannon",
+    "email": "craig@supabase.com",
+    "company": "Supabase",
+    "domain": "supabase.com",
+    "title": "Head of DevRel & Marketing",
+    "hook": "Supabase is winning the developer heart-share battle against Firebase - but that organic love on r/webdev hasn't been amplified with paid yet. That's a compounding opportunity",
+    "reddit_fit": "r/webdev and r/node host daily 'Firebase vs Supabase' threads where developers recommend tools to each other - paid amplification there would compound Supabase's organic edge"
+  },
+  {
+    "first_name": "Marcio",
+    "last_name": "Arnecke",
+    "email": "marcio.arnecke@apollo.io",
+    "company": "Apollo.io",
+    "domain": "apollo.io",
+    "title": "CMO",
+    "hook": "Apollo's data accuracy reputation is taking hits on r/sales - SDRs openly share bounce rates and compare against ZoomInfo and Hunter. That narrative is shaping your pipeline right now",
+    "reddit_fit": "r/sales hosts active sales-tool threads where SDRs share real accuracy benchmarks - Apollo can address the data quality narrative directly with targeted placement"
+  },
+  {
+    "first_name": "Cheryl",
+    "last_name": "Sanclemente",
+    "email": "cheryl.sanclemente@lattice.com",
+    "company": "Lattice",
+    "domain": "lattice.com",
+    "title": "CMCO",
+    "hook": "Lattice's learning curve is the main pushback HR leaders give before choosing 15Five or Culture Amp instead - and that objection surfaces regularly on r/humanresources",
+    "reddit_fit": "r/humanresources (95K) hosts recurring performance-platform threads where people ops leaders compare ease of use - Lattice can reframe that with case studies via paid"
+  },
+  {
+    "first_name": "Chris",
+    "last_name": "Kozup",
+    "email": "chris.kozup@darktrace.com",
+    "company": "Darktrace",
+    "domain": "darktrace.com",
+    "title": "CMO",
+    "hook": "Alert fatigue from false positives is Darktrace's biggest objection in enterprise sales - and CISOs on r/cybersecurity openly discuss it before making their shortlist",
+    "reddit_fit": "r/cybersecurity hosts active NDR evaluation threads where security leaders compare Darktrace vs Vectra on real-world accuracy - that's interceptable buying intent"
+  },
+  {
+    "first_name": "Harris",
+    "last_name": "Beber",
+    "email": "harrisbe@monday.com",
+    "company": "monday.com",
+    "domain": "monday.com",
+    "title": "CMO",
+    "hook": "monday.com looks great until complexity hits - that's the feedback loop playing out on r/ProjectManagement where teams compare it against ClickUp and Asana for scale",
+    "reddit_fit": "r/ProjectManagement hosts daily PM-tool threads where ops leaders share real scaling experiences - monday.com can shape the 'works at scale' narrative with paid"
+  },
+  {
+    "first_name": "Ural",
+    "last_name": "Cebeci",
+    "email": "ural.cebeci@braze.com",
+    "company": "Braze",
+    "domain": "braze.com",
+    "title": "SVP Marketing, Global Demand Gen",
+    "hook": "Braze's steep learning curve is pushing growth teams to evaluate Iterable and Customer.io instead - and that evaluation happens on r/growthmarketing before any demo is booked",
+    "reddit_fit": "r/growthmarketing and r/marketing host active engagement-platform threads where growth teams compare onboarding complexity - Braze can get ahead of that objection"
+  },
+  {
+    "first_name": "Ian",
+    "last_name": "Adams",
+    "email": "iadams@vendasta.com",
+    "company": "Vendasta",
+    "domain": "vendasta.com",
+    "title": "VP Demand Generation",
+    "hook": "GoHighLevel is dominating the agency reseller conversation on Reddit - and Vendasta's absence from r/agencies is letting competitors own the white-label narrative",
+    "reddit_fit": "r/agencies and r/marketing host recurring white-label platform threads where agency owners choose reseller tools - Vendasta can reclaim that conversation with paid"
+  },
+  {
+    "first_name": "Adam",
+    "last_name": "Kaiser",
+    "email": "adam.kaiser@6sense.com",
+    "company": "6sense",
+    "domain": "6sense.com",
+    "title": "VP Brand & Growth Marketing",
+    "hook": "Teams are skipping 6sense's price tag and using Leadfeeder at a fraction of the cost - and that cost-benefit debate is playing out on r/B2Bmarketing right now",
+    "reddit_fit": "r/B2Bmarketing hosts active intent-data threads where demand gen leaders compare ROI at different price points - 6sense can justify the investment with the right message"
+  },
+  {
+    "first_name": "Fara",
+    "last_name": "Howard",
+    "email": "fara.howard@gusto.com",
+    "company": "Gusto",
+    "domain": "gusto.com",
+    "title": "CMO",
+    "hook": "Gusto wins on simplicity but Rippling wins on scale - and startup founders on r/startups are asking which matters more at every growth stage",
+    "reddit_fit": "r/startups and r/smallbusiness host active payroll-platform threads where founders weigh simplicity vs features - Gusto can own the 'right for your stage' message"
+  },
+  {
+    "first_name": "Sheila",
+    "last_name": "Vashee",
+    "email": "svashee@figma.com",
+    "company": "Figma",
+    "domain": "figma.com",
+    "title": "CMO",
+    "hook": "The Adobe acquisition uncertainty is pushing designers to explore Penpot and other alternatives - and that exploration is happening on r/design where your power users live",
+    "reddit_fit": "r/design and r/userexperience host daily tool discussions where designers share migration plans - Figma can reinforce loyalty and win back wavering users with paid"
+  },
+  {
+    "first_name": "Kady",
+    "last_name": "Srinivasan",
+    "email": "kady.srinivasan@freshworks.com",
+    "company": "Freshworks",
+    "domain": "freshworks.com",
+    "title": "CMO",
+    "hook": "Zendesk still wins the enterprise mindshare battle against Freshworks - and that perception gap is reinforced on r/sysadmin where IT admins recommend helpdesk tools to peers",
+    "reddit_fit": "r/sysadmin and r/customerservice host active helpdesk comparison threads where IT leaders default to Zendesk - Freshworks can challenge that default with targeted ads"
+  },
+  {
+    "first_name": "Jamie",
+    "last_name": "Domenici",
+    "email": "jamie.domenici@klaviyo.com",
+    "company": "Klaviyo",
+    "domain": "klaviyo.com",
+    "title": "CMO",
+    "hook": "Shopify's native email tool is eating Klaviyo's bottom of funnel - DTC founders on r/Entrepreneur are openly asking 'do I still need Klaviyo?' after 3 price hikes in 4 years",
+    "reddit_fit": "r/Entrepreneur and r/ecommerce host active email-platform threads where founders compare Klaviyo's ROI against cheaper alternatives - that's winnable intent"
+  },
+  {
+    "first_name": "Shane",
+    "last_name": "Phair",
+    "email": "shane.phair@datadoghq.com",
+    "company": "Datadog",
+    "domain": "datadoghq.com",
+    "title": "VP Marketing - Growth, Demand Gen & Field",
+    "hook": "Datadog's cost reputation is a meme on r/devops - engineers joke about it eating their entire observability budget. That narrative is real and it's shaping procurement decisions",
+    "reddit_fit": "r/devops (347K) hosts daily observability-cost threads where SREs compare Datadog vs Grafana - Datadog can reframe the value conversation with the right placement"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Baer",
+    "email": "nicole.baer@carta.com",
+    "company": "Carta",
+    "domain": "carta.com",
+    "title": "CMO",
+    "hook": "Carta's pricing is hitting 5 figures for growing startups - and Pulley is picking off frustrated founders on r/startups where cap table cost complaints surface weekly",
+    "reddit_fit": "r/startups and r/venturecapital host active equity-platform threads where founders compare pricing during fundraising - Carta can defend market share with the right message"
+  },
+  {
+    "first_name": "Billy",
+    "last_name": "Jones",
+    "email": "billy.jones@hootsuite.com",
+    "company": "Hootsuite",
+    "domain": "hootsuite.com",
+    "title": "CMO",
+    "hook": "Hootsuite's legacy pricing is pushing teams to Buffer and Sprout Social - and that switching conversation is one of the most active threads on r/marketing",
+    "reddit_fit": "r/marketing (1.3M) hosts recurring social-tool threads where marketers compare cost per seat - Hootsuite can fight the 'overpriced legacy tool' narrative with paid"
+  },
+  {
+    "first_name": "Mike",
+    "last_name": "Raley",
+    "email": "mraley@coveo.com",
+    "company": "Coveo",
+    "domain": "coveo.com",
+    "title": "SVP Marketing",
+    "hook": "Coveo's steep learning curve and vague docs are the top complaints from enterprise teams - and those complaints push buyers toward Elastic's open-source alternative on r/developers",
+    "reddit_fit": "r/developers and r/elasticsearch host enterprise-search threads where engineers value transparency and documentation - Coveo can address that gap with developer-focused ads"
+  },
+  {
+    "first_name": "Renee",
+    "last_name": "Gapen",
+    "email": "gapenr@pointclickcare.com",
+    "company": "PointClickCare",
+    "domain": "pointclickcare.com",
+    "title": "SVP Marketing",
+    "hook": "EHR interoperability failures are the #1 complaint from skilled nursing facilities - and those pain points are being documented on r/healthIT where healthcare IT leaders discuss solutions",
+    "reddit_fit": "r/healthIT (51K) hosts active EHR-platform threads where healthcare administrators compare long-term care systems - PointClickCare can own that niche conversation"
+  },
+  {
+    "first_name": "Guillaume",
+    "last_name": "Conteville",
+    "email": "guillaume.conteville@nuvei.com",
+    "company": "Nuvei",
+    "domain": "nuvei.com",
+    "title": "CMO",
+    "hook": "Stripe dominates mindshare but merchants with cross-border complexity need more - and that 'Stripe isn't enough' realization is happening on r/ecommerce where high-volume sellers compare options",
+    "reddit_fit": "r/ecommerce and r/payments host payment-processor threads where merchants compare fraud controls and global coverage - Nuvei can win the 'beyond Stripe' buyer"
+  },
+  {
+    "first_name": "Hannah",
+    "last_name": "Dang",
+    "email": "hannah.dang@applyboard.com",
+    "company": "ApplyBoard",
+    "domain": "applyboard.com",
+    "title": "AVP Growth & Value Solutions",
+    "hook": "International students do their entire school-selection journey on Reddit before contacting any platform - r/IBO and r/universityapplications are where ApplyBoard's funnel actually starts",
+    "reddit_fit": "r/IBO, r/universityapplications, and r/gradadmissions host daily study-abroad threads where students compare platforms - ApplyBoard can capture intent at the top of the funnel"
+  },
+  {
+    "first_name": "Natasha",
+    "last_name": "Heney",
+    "email": "natasha@thoughtmachine.net",
+    "company": "Thought Machine",
+    "domain": "thoughtmachine.net",
+    "title": "Marketing & Events Manager",
+    "hook": "Banks modernizing off Temenos and FIS are evaluating cloud-native core platforms - and that evaluation conversation is happening on r/fintech where fintech architects compare stacks",
+    "reddit_fit": "r/fintech and r/banking host core-banking threads where bank CTOs compare cloud-native options - Thought Machine can reach decision-makers during the evaluation window"
+  },
+  {
+    "first_name": "Vittorio",
+    "last_name": "Boccanera",
+    "email": "vittorioboccanera@monzo.com",
+    "company": "Monzo",
+    "domain": "monzo.com",
+    "title": "Head of Growth Marketing, UK & EU",
+    "hook": "Chase UK is aggressively gaining on Monzo's NPS lead - and the switching conversation is playing out on r/UKPersonalFinance where UK consumers compare challenger banks weekly",
+    "reddit_fit": "r/UKPersonalFinance hosts daily bank-comparison threads where consumers share real switching experiences - Monzo can defend its position and win switchers with paid"
+  },
+  {
+    "first_name": "Rachel",
+    "last_name": "Casey",
+    "email": "rachel.casey@checkout.com",
+    "company": "Checkout.com",
+    "domain": "checkout.com",
+    "title": "Head of Global Field Marketing and Events",
+    "hook": "Stripe dominates the startup payment narrative but high-volume merchants need different things - and that 'outgrowing Stripe' moment is discussed on r/webdev and r/ecommerce",
+    "reddit_fit": "r/webdev and r/ecommerce host payment-API threads where developers compare DX and enterprise capabilities - Checkout.com can own the 'scale-ready' positioning"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "McShane",
+    "email": "ryan.mcshane@salesloft.com",
+    "company": "Salesloft",
+    "domain": "salesloft.com",
+    "title": "VP Product Marketing",
+    "hook": "SDR burnout and declining reply rates are pushing sales leaders to question their engagement platform - and that 'is Salesloft still worth it vs Outreach?' debate lives on r/sales",
+    "reddit_fit": "r/sales (510K) hosts daily sales-engagement threads where reps share real reply-rate data - Salesloft can reshape the ROI narrative with the right paid placement"
+  },
+  {
+    "first_name": "Angelika",
+    "last_name": "Angga",
+    "email": "aangga@gocardless.com",
+    "company": "GoCardless",
+    "domain": "gocardless.com",
+    "title": "Head of Growth Partner Acquisition",
+    "hook": "Failed payments cost subscription businesses 9% of revenue on average - and SaaS founders on r/SaaS are actively looking for better collection infrastructure beyond Stripe",
+    "reddit_fit": "r/SaaS and r/fintech host active payment-infrastructure threads where subscription businesses compare collection rates - GoCardless's 97% first-attempt success rate sells itself there"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Quach",
+    "email": "steven.quach@pipedrive.com",
+    "company": "Pipedrive",
+    "domain": "pipedrive.com",
+    "title": "CMO",
+    "hook": "HubSpot's complexity is pushing SMB sales teams toward simpler CRMs - and the 'HubSpot is overkill for my team' conversation runs weekly on r/sales where reps compare Pipedrive head-to-head",
+    "reddit_fit": "r/sales (510K) and r/smallbusiness host recurring CRM-comparison threads where sales reps debate simplicity vs features - Pipedrive can own the 'built for sellers not admins' narrative with paid"
+  },
+  {
+    "first_name": "Tifenn",
+    "last_name": "Dano Kwan",
+    "email": "tifenn@amplitude.com",
+    "company": "Amplitude",
+    "domain": "amplitude.com",
+    "title": "CMO",
+    "hook": "PostHog's open-source product analytics is pulling developer-first teams away from Amplitude - and the 'self-hosted vs cloud analytics' debate is one of the hottest threads on r/analytics right now",
+    "reddit_fit": "r/analytics and r/ProductManagement host active product-analytics threads where PMs compare Amplitude vs PostHog on cost and flexibility - that's interceptable buying intent"
+  },
+  {
+    "first_name": "Melike",
+    "last_name": "A.",
+    "email": "ma@mixpanel.com",
+    "company": "Mixpanel",
+    "domain": "mixpanel.com",
+    "title": "VP of Marketing",
+    "hook": "PostHog and Heap are eating into Mixpanel's mid-market with simpler pricing - and PMs on r/ProductManagement are openly asking 'is Mixpanel worth renewing?' before contract decisions",
+    "reddit_fit": "r/ProductManagement and r/analytics host recurring analytics-platform threads where PMs compare pricing models and event limits - Mixpanel can reframe the value conversation with paid"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Rollinson",
+    "email": "kevin.rollinson@pendo.io",
+    "company": "Pendo",
+    "domain": "pendo.io",
+    "title": "Product Marketing Director",
+    "hook": "Product teams are pushing back on Pendo's pricing for in-app guidance - and the 'Pendo vs Appcues vs WalkMe' comparison runs monthly on r/ProductManagement where PMs choose onboarding tools",
+    "reddit_fit": "r/ProductManagement hosts active onboarding-tool threads where PMs weigh analytics depth vs ease of implementation - Pendo can differentiate on product-led growth data with the right placement"
+  },
+  {
+    "first_name": "Keith",
+    "last_name": "Messick",
+    "email": "keith.messick@vercel.com",
+    "company": "Vercel",
+    "domain": "vercel.com",
+    "title": "CMO",
+    "hook": "Vercel's pricing past the hobby tier is the #1 complaint from indie developers - and that frustration is pushing them to Netlify and Cloudflare Pages on r/webdev where 2.6M developers hang out",
+    "reddit_fit": "r/webdev (2.6M) and r/nextjs host daily deployment-platform threads where developers compare pricing at scale - Vercel can reframe the cost-vs-DX tradeoff with paid"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Engelland",
+    "email": "jengelland@launchdarkly.com",
+    "company": "LaunchDarkly",
+    "domain": "launchdarkly.com",
+    "title": "VP of Marketing",
+    "hook": "Open-source feature flags like Flagsmith and Unleash are pulling engineering teams away from LaunchDarkly's enterprise pricing - and that 'build vs buy' debate surfaces weekly on r/devops",
+    "reddit_fit": "r/devops (347K) and r/programming host active feature-flag threads where engineers compare build-vs-buy tradeoffs at scale - LaunchDarkly can justify the enterprise investment with paid"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Maxson Martinet",
+    "email": "elizabeth.maxson@contentful.com",
+    "company": "Contentful",
+    "domain": "contentful.com",
+    "title": "CMO",
+    "hook": "Strapi's open-source headless CMS is winning the developer hearts Contentful used to own - and the 'Contentful vs Strapi' migration thread runs monthly on r/webdev",
+    "reddit_fit": "r/webdev and r/jamstack host recurring headless-CMS threads where developers compare open-source vs enterprise reliability - Contentful can reframe that narrative with paid"
+  },
+  {
+    "first_name": "Gehrig",
+    "last_name": "Kunz",
+    "email": "gehrig.kunz@netlify.com",
+    "company": "Netlify",
+    "domain": "netlify.com",
+    "title": "Principal Product Marketing Manager",
+    "hook": "Vercel's Next.js dominance is pulling frontend teams away from Netlify - and developers on r/webdev openly ask 'is Netlify still relevant?' when choosing deployment platforms",
+    "reddit_fit": "r/webdev and r/jamstack host daily deployment-platform threads where developers compare ecosystems - Netlify can defend its position as the framework-agnostic choice with paid"
+  },
+  {
+    "first_name": "Megan",
+    "last_name": "Lew",
+    "email": "megan.lew@close.com",
+    "company": "Close",
+    "domain": "close.com",
+    "title": "SVP Marketing",
+    "hook": "Close's built-in calling and email are what SDRs love most - but HubSpot's free tier keeps winning the 'first CRM' battle on r/sales where new sales teams pick their stack",
+    "reddit_fit": "r/sales (510K) and r/startups host recurring CRM-comparison threads where early-stage teams compare all-in-one options - Close can own the 'purpose-built for closers' narrative with paid"
+  }
+]

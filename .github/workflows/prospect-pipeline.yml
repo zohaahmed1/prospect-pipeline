@@ -1,0 +1,48 @@
+name: Prospect Pipeline
+
+on:
+  # Manual trigger from GitHub UI / mobile app
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Pipeline mode'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - verify-only
+          - push-only
+          - dry-run
+
+  # Every Tuesday at 8am CT (1pm UTC)
+  schedule:
+    - cron: '0 13 * * 2'
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
+          MILLION_VERIFIER_KEY: ${{ secrets.MILLION_VERIFIER_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'full' }}"
+          case "$MODE" in
+            verify-only) python3 prospect_pipeline.py --verify-only ;;
+            push-only)   python3 prospect_pipeline.py --push-only ;;
+            dry-run)     python3 prospect_pipeline.py --dry-run ;;
+            *)           python3 prospect_pipeline.py ;;
+          esac
