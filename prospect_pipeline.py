@@ -344,15 +344,20 @@ def push_to_instantly(contacts_to_push, dry_run=False):
 # ---------------------------------------------------------------------------
 
 def post_to_slack(summary):
-    """Post pipeline results to Slack via incoming webhook."""
+    """Post pipeline results to Slack via Incoming Webhook."""
     if not SLACK_WEBHOOK_URL:
         print("  [SLACK] No webhook URL configured, skipping notification")
         return
     try:
-        payload = {"text": summary}
-        r = requests.post(SLACK_WEBHOOK_URL, json=payload, timeout=10)
-        r.raise_for_status()
-        print("  [SLACK] Notification sent")
+        r = requests.post(
+            SLACK_WEBHOOK_URL,
+            json={"text": summary},
+            timeout=10,
+        )
+        if r.status_code == 200:
+            print("  [SLACK] Notification sent")
+        else:
+            print(f"  [SLACK] Error: {r.status_code} {r.text}")
     except Exception as e:
         print(f"  [SLACK] Failed to send notification: {e}")
 
