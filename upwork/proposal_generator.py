@@ -1,6 +1,8 @@
 """
-Proposal generator — uses Anthropic SDK if ANTHROPIC_API_KEY is set,
-otherwise falls back to the `claude` CLI subprocess.
+Proposal generator — priority order:
+  1. Anthropic SDK   (if ANTHROPIC_API_KEY is set)
+  2. OAuth API call  (if CLAUDE_CODE_OAUTH_TOKEN is set — uses Claude Max subscription)
+  3. claude CLI      (local fallback via multiprocessing spawn)
 
 Agency: Skip the Noise Media
 """
@@ -8,6 +10,7 @@ Agency: Skip the Noise Media
 import os
 import subprocess
 import multiprocessing as mp
+import requests as _requests
 from pathlib import Path
 
 # ── Load .env ──────────────────────────────────────────────────────────────────
@@ -19,20 +22,25 @@ if _env_path.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
 
+# ── Load secrets from Streamlit Cloud ─────────────────────────────────────────
+try:
+    import streamlit as _st
+    if hasattr(_st, "secrets"):
+        for _key in ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"]:
+            try:
+                if _key in _st.secrets:
+                    os.environ.setdefault(_key, _st.secrets[_key])
+            except Exception:
+                pass
+except Exception:
+    pass
+
 # ── Anthropic SDK (optional) ───────────────────────────────────────────────────
 try:
     import anthropic as _anthropic
     _sdk_available = True
 except ImportError:
     _sdk_available = False
-
-# ── Load ANTHROPIC_API_KEY from Streamlit secrets (Streamlit Cloud) ────────────
-try:
-    import streamlit as _st
-    if hasattr(_st, "secrets") and "ANTHROPIC_API_KEY" in _st.secrets:
-        os.environ.setdefault("ANTHROPIC_API_KEY", _st.secrets["ANTHROPIC_API_KEY"])
-except Exception:
-    pass
 
 _SYSTEM_PROMPT = """You write Upwork proposals for Zoha at Skip the Noise Media, a Reddit Certified Partner performance marketing agency.
 
@@ -78,7 +86,7 @@ def _via_sdk(user_prompt):
     """Generate using Anthropic Python SDK."""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        return None  # fall through to CLI
+        return None  # fall through
     client = _anthropic.Anthropic(api_key=api_key)
     msg = client.messages.create(
         model="claude-sonnet-4-6",
@@ -87,6 +95,37 @@ def _via_sdk(user_prompt):
         messages=[{"role": "user", "content": user_prompt}],
     )
     return msg.content[0].text.strip()
+
+
+def _via_oauth(user_prompt):
+    """Generate via Anthropic API using Claude Max OAuth token (no API key needed).
+
+    Claude Code stores the OAuth token in CLAUDE_CODE_OAUTH_TOKEN.
+    The Anthropic API accepts it as a Bearer token, so Claude Max subscribers
+    can make API calls without a separate API key.
+    """
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "")
+    if not token:
+        return None  # fall through
+    resp = _requests.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
+        },
+        json={
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 512,
+            "system": _SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": user_prompt}],
+        },
+        timeout=30,
+    )
+    if resp.status_code == 200:
+        return resp.json()["content"][0]["text"].strip()
+    # Non-200 means token doesn't work for direct API calls — fall through to CLI
+    return None
 
 
 # ── CLI via multiprocessing spawn ──────────────────────────────────────────────
@@ -163,26 +202,38 @@ def _via_cli(full_prompt):
 def generate_proposal(title, description, budget, skills, client_info=""):
     """Generate a tailored Upwork proposal.
 
-    Tries Anthropic SDK first (if ANTHROPIC_API_KEY set), then falls back
-    to the claude CLI (Claude Code subscription).
+    Priority:
+      1. Anthropic SDK    — if ANTHROPIC_API_KEY is set
+      2. OAuth API call   — if CLAUDE_CODE_OAUTH_TOKEN is set (Claude Max, no API key needed)
+      3. claude CLI       — local fallback via multiprocessing spawn
 
     Returns proposal text string, or an error message starting with 'Error:'.
     """
     user_prompt = _build_user_prompt(title, description, budget, skills, client_info)
     full_prompt = f"{_SYSTEM_PROMPT}\n\n---\n\n{user_prompt}"
 
-    # 1. Try SDK
+    # 1. SDK
     if _sdk_available and os.environ.get("ANTHROPIC_API_KEY"):
         try:
             return _via_sdk(user_prompt)
         except Exception as e:
             return f"Error: Anthropic SDK failed — {e}"
 
-    # 2. Fall back to CLI (via spawn to avoid macOS Mach port segfault)
+    # 2. OAuth token (Claude Max — works on Streamlit Cloud, no separate API key)
+    if os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        try:
+            result = _via_oauth(user_prompt)
+            if result:
+                return result
+            # None means the token doesn't support direct API calls — fall through to CLI
+        except Exception:
+            pass
+
+    # 3. CLI via spawn (local only — avoids macOS Mach port segfault)
     try:
         return _via_cli(full_prompt)
     except FileNotFoundError:
-        return "Error: `claude` CLI not found. Install Claude Code or set ANTHROPIC_API_KEY in .env."
+        return "Error: Proposal generation unavailable. Add CLAUDE_CODE_OAUTH_TOKEN to Streamlit secrets."
     except subprocess.TimeoutExpired:
         return "Error: Proposal generation timed out (60s)."
     except Exception as e:
