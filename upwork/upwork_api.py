@@ -152,6 +152,64 @@ _NEGATIVE_KEYWORDS = {
     "content creator": -1,
 }
 
+# ── Geo tiers ──────────────────────────────────────────────────────────────────
+# Tier-1: high-budget direct clients, Zoha's primary market
+_TIER1_COUNTRIES = frozenset({
+    "US", "CA",                                           # North America
+    "GB", "AU", "NZ", "IE",                               # UK + Anglosphere
+    "DE", "FR", "NL", "SE", "NO", "DK", "FI",            # Northern/Western EU
+    "CH", "AT", "BE", "ES", "IT", "PT", "PL", "CZ",      # Rest of EU
+    "SG", "JP", "KR", "HK", "AE", "IL",                  # High-income APAC + ME
+})
+
+# Tier-3: low-budget / high-volume markets — deprioritize
+TIER3_COUNTRIES = frozenset({
+    "IN", "PK", "BD", "PH", "NG", "EG", "MM", "LK",
+    "NP", "GH", "KE", "ET", "TZ", "UG", "ZM", "RW",
+    "VN", "KH", "ID",
+})
+
+_COUNTRY_NAME_TO_CODE: dict[str, str] = {
+    "United States": "US", "Canada": "CA", "United Kingdom": "GB",
+    "Australia": "AU", "New Zealand": "NZ", "Ireland": "IE",
+    "Germany": "DE", "France": "FR", "Netherlands": "NL",
+    "Sweden": "SE", "Norway": "NO", "Denmark": "DK", "Finland": "FI",
+    "Switzerland": "CH", "Austria": "AT", "Belgium": "BE",
+    "Spain": "ES", "Italy": "IT", "Portugal": "PT", "Poland": "PL",
+    "Czech Republic": "CZ", "Czechia": "CZ",
+    "Singapore": "SG", "Japan": "JP", "South Korea": "KR",
+    "Hong Kong": "HK", "United Arab Emirates": "AE", "Israel": "IL",
+    "India": "IN", "Pakistan": "PK", "Bangladesh": "BD",
+    "Philippines": "PH", "Nigeria": "NG", "Egypt": "EG",
+    "Myanmar": "MM", "Sri Lanka": "LK", "Nepal": "NP",
+    "Ghana": "GH", "Kenya": "KE", "Vietnam": "VN",
+    "Cambodia": "KH", "Indonesia": "ID",
+    "Ukraine": "UA", "Russia": "RU", "Brazil": "BR", "Mexico": "MX",
+}
+
+
+def _to_country_code(country_str: str) -> str:
+    """Normalize a country name or 2-letter code to uppercase ISO 3166-1 alpha-2."""
+    if not country_str:
+        return ""
+    s = country_str.strip()
+    if len(s) == 2:
+        return s.upper()
+    return _COUNTRY_NAME_TO_CODE.get(s, "")
+
+
+def _geo_score(country_code: str) -> int:
+    """Return +1 for Tier-1 countries, -3 for Tier-3, 0 otherwise."""
+    if not country_code:
+        return 0
+    code = country_code.upper()
+    if code in _TIER1_COUNTRIES:
+        return 1
+    if code in TIER3_COUNTRIES:
+        return -3
+    return 0
+
+
 _last_api_error = None
 
 
@@ -264,6 +322,7 @@ query SearchJobs($searchExpr: String!) {
           totalPostedJobs
           totalSpent { displayValue }
           verificationStatus
+          location { country }
         }
       }
     }
@@ -386,9 +445,12 @@ def _score_job(job):
     # ── Negative signals ──────────────────────────────────────────────────────
     neg = sum(pts for kw, pts in _NEGATIVE_KEYWORDS.items() if kw in text)
 
+    # ── Geo score (always applied — not gated by keyword signal) ─────────────
+    geo = _geo_score((job.get("client") or {}).get("countryCode", ""))
+
     # ── Gate: if paid-ads signal is weak, budget/client bonuses don't apply ───
     if kw_score < 2:
-        return max(0, min(kw_score + neg, 4))
+        return max(0, min(kw_score + neg + geo, 4))
 
     # ── Budget (0–2) ──────────────────────────────────────────────────────────
     budget_score = _budget_score(job.get("budget", ""), job.get("engagement", ""))
@@ -407,7 +469,7 @@ def _score_job(job):
         except Exception:
             pass
 
-    total = kw_score + budget_score + client_score + recency + neg
+    total = kw_score + budget_score + client_score + recency + neg + geo
     return max(0, min(total, 10))
 
 
@@ -445,6 +507,8 @@ def score_breakdown(job):
         except Exception:
             pass
 
+    geo = _geo_score(client.get("countryCode", ""))
+
     return {
         "kw_score": kw_score,
         "budget_score": budget_score,
@@ -456,6 +520,9 @@ def score_breakdown(job):
         "matched_neg": matched_neg,
         "spent_ok": spent_ok,
         "spend_str": spend_str,
+        "geo_score": geo,
+        "country": client.get("country", ""),
+        "country_code": client.get("countryCode", ""),
     }
 
 
@@ -501,11 +568,15 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
 
             # Client info — normalise field names
             raw_client = node.get("client") or {}
+            _raw_country = (raw_client.get("location") or {}).get("country", "")
+            _country_code = _to_country_code(_raw_country)
             client = {
                 "paymentVerificationStatus": "VERIFIED" if raw_client.get("verificationStatus") == "VERIFIED" else "",
                 "totalFeedback": raw_client.get("totalFeedback", 0),
                 "totalPostedJobs": raw_client.get("totalPostedJobs", 0),
                 "totalSpent": {"amount": (raw_client.get("totalSpent") or {}).get("displayValue", "")},
+                "country": _raw_country,
+                "countryCode": _country_code,
             }
 
             ciphertext = node.get("ciphertext", "")

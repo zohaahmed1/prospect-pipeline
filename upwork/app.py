@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from upwork_api import (
     KEYWORD_GROUPS,
+    TIER3_COUNTRIES,
     CLIENT_ID,
     CLIENT_SECRET,
     STORED_ACCESS_TOKEN,
@@ -199,6 +200,13 @@ if _oauth_code and not st.session_state.access_token:
 
 
 # ── Helper functions ───────────────────────────────────────────────────────────
+def _country_flag(code: str) -> str:
+    """Convert a 2-letter ISO country code to its flag emoji (e.g. 'US' → 🇺🇸)."""
+    if not code or len(code) != 2:
+        return ""
+    return "".join(chr(0x1F1E0 + ord(c) - ord("A")) for c in code.upper())
+
+
 def score_badge(score):
     if score >= 8:
         return f"🟢 {score}/10"
@@ -210,6 +218,11 @@ def score_badge(score):
 
 def format_client(client):
     parts = []
+    country_code = client.get("countryCode", "")
+    if country_code:
+        flag = _country_flag(country_code)
+        country_name = client.get("country", country_code)
+        parts.append(f"{flag} {country_name}" if flag else country_name)
     if client.get("paymentVerificationStatus") == "VERIFIED":
         parts.append("✅ Payment verified")
     rating = float(client.get("totalFeedback") or 0)
@@ -350,6 +363,12 @@ with st.sidebar:
     posted_hours = {"All time": None, "Last 24h": 24, "Last 48h": 48, "Last 7 days": 168}[posted_within]
 
     min_score = st.slider("Minimum Relevance Score", 0, 10, 4)
+
+    hide_tier3 = st.checkbox(
+        "🌎 Hide Tier-3 country jobs",
+        value=True,
+        help="Filter out jobs from clients in India, Pakistan, Philippines, Nigeria, Bangladesh, etc.",
+    )
 
     sort_by = st.selectbox(
         "Sort by",
@@ -542,6 +561,8 @@ with tab_search:
         and j["id"] not in st.session_state.dismissed
         and j["id"] not in st.session_state.applied
         and (posted_hours is None or _job_hours_old(j) <= posted_hours)
+        and (not hide_tier3
+             or (j.get("client") or {}).get("countryCode", "") not in TIER3_COUNTRIES)
     ]
 
     # Sort
@@ -650,6 +671,12 @@ with tab_search:
                         lines.append(f"**Client:** +{bd['client_score']}{spend_note}")
                     if bd["recency"]:
                         lines.append("**Recency:** +1 (posted < 48h)")
+                    if bd.get("geo_score"):
+                        _geo_s = bd["geo_score"]
+                        _geo_flag = _country_flag(bd.get("country_code", ""))
+                        _geo_name = bd.get("country", bd.get("country_code", ""))
+                        _geo_label = f"{_geo_flag} {_geo_name}".strip() or "unknown"
+                        lines.append(f"**Geo:** {'+' if _geo_s > 0 else ''}{_geo_s} ({_geo_label})")
                     st.markdown("  \n".join(lines))
 
                 # ── Proposal controls ──────────────────────────────────────────
