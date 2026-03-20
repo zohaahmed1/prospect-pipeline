@@ -13,6 +13,7 @@ from pathlib import Path
 from upwork_api import (
     KEYWORD_GROUPS,
     TIER3_COUNTRIES,
+    _TIER3_COUNTRY_NAMES,
     CLIENT_ID,
     CLIENT_SECRET,
     STORED_ACCESS_TOKEN,
@@ -163,6 +164,8 @@ if "liked" not in st.session_state:
     st.session_state.liked = {e["id"] for e in _load_liked_log()}
 if "page" not in st.session_state:
     st.session_state.page = 0
+if "last_searched" not in st.session_state:
+    st.session_state.last_searched = ""
 
 
 def _save_token_to_env(token):
@@ -306,6 +309,16 @@ def _passes_budget_filter(job, min_hourly: float, min_fixed: float) -> bool:
         return min_hourly == 0 or val >= min_hourly
     else:
         return min_fixed == 0 or val >= min_fixed
+
+
+def _is_tier3_job(job: dict) -> bool:
+    """Check if a job is from a Tier-3 country (by client code or title/description)."""
+    cc = (job.get("client") or {}).get("countryCode", "")
+    if cc and cc in TIER3_COUNTRIES:
+        return True
+    # Fallback: check title for country names (catches cached jobs without countryCode)
+    title_lower = job.get("title", "").lower()
+    return any(name in title_lower for name in _TIER3_COUNTRY_NAMES)
 
 
 def _client_spent_value(client: dict) -> float:
@@ -544,6 +557,7 @@ if search_clicked:
             st.session_state.jobs = jobs
             st.session_state.searched = True
             st.session_state.page = 0   # reset to first page on new search
+            st.session_state.last_searched = datetime.now(timezone.utc).strftime("%b %d, %I:%M %p UTC")
             _save_jobs_cache(jobs)
             if err:
                 st.warning(f"Some searches failed: {err}")
@@ -630,8 +644,7 @@ with tab_search:
         and j["id"] not in st.session_state.dismissed
         and j["id"] not in st.session_state.applied
         and (posted_hours is None or _job_hours_old(j) <= posted_hours)
-        and (not hide_tier3
-             or (j.get("client") or {}).get("countryCode", "") not in TIER3_COUNTRIES)
+        and (not hide_tier3 or not _is_tier3_job(j))
         and _passes_budget_filter(j, min_hourly_val, min_fixed_val)
         and _client_spent_value(j.get("client") or {}) >= min_spent_val
     ]
@@ -659,10 +672,12 @@ with tab_search:
         _cur_page = min(st.session_state.get("page", 0), _total_pages - 1)
         _page_jobs = jobs[_cur_page * _PER_PAGE : (_cur_page + 1) * _PER_PAGE]
 
+        _last_ts = st.session_state.get("last_searched", "")
         st.caption(
             f"Showing {len(jobs)} of {total_found} jobs · "
             f"page {_cur_page + 1}/{_total_pages} · sorted by {sort_by.lower()}"
             + (f" · {dismissed_count} dismissed" if dismissed_count else "")
+            + (f" · searched {_last_ts}" if _last_ts else "")
         )
 
         for job in _page_jobs:

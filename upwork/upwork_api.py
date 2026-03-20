@@ -355,7 +355,6 @@ query SearchJobs($searchExpr: String!) {
           totalPostedJobs
           totalSpent { displayValue }
           verificationStatus
-          location { country }
         }
       }
     }
@@ -623,15 +622,13 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
 
             # Client info — normalise field names
             raw_client = node.get("client") or {}
-            _raw_country = (raw_client.get("location") or {}).get("country", "")
-            _country_code = _to_country_code(_raw_country)
             client = {
                 "paymentVerificationStatus": "VERIFIED" if raw_client.get("verificationStatus") == "VERIFIED" else "",
                 "totalFeedback": raw_client.get("totalFeedback", 0),
                 "totalPostedJobs": raw_client.get("totalPostedJobs", 0),
                 "totalSpent": {"amount": (raw_client.get("totalSpent") or {}).get("displayValue", "")},
-                "country": _raw_country,
-                "countryCode": _country_code,
+                "country": "",
+                "countryCode": "",
             }
 
             ciphertext = node.get("ciphertext", "")
@@ -653,6 +650,18 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
                 continue
             if job_type == "fixed" and is_hourly:
                 continue
+
+            # Title-based Tier-3 country detection (API doesn't expose client location)
+            title_lower = (node.get("title") or "").lower()
+            for name in _TIER3_COUNTRY_NAMES:
+                if name in title_lower:
+                    code = _COUNTRY_NAME_TO_CODE.get(
+                        next((n for n, c in _COUNTRY_NAME_TO_CODE.items() if n.lower() == name), ""), ""
+                    )
+                    if code:
+                        client["country"] = name.title()
+                        client["countryCode"] = code
+                    break
 
             job["score"] = _score_job(job)
             seen[jid] = job
