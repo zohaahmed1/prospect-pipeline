@@ -126,11 +126,32 @@ _SCORE_KEYWORDS = {
     "conversion rate": 1,
 }
 
+# Positive signals for retainer/ongoing work and strategic scope
+# (added on top of the keyword scores above)
+_RETAINER_KEYWORDS = {
+    "retainer": 2,
+    "ongoing": 1,
+    "long-term": 1,
+    "long term": 1,
+    "monthly": 1,
+    "growth marketing": 1,
+}
+
 # Negative signals — deduct for clear wrong-fits
 _NEGATIVE_KEYWORDS = {
     # Completely wrong service type
     "seo": -3,
     "search engine optimization": -3,
+    # Admin / virtual assistant — nothing to do with paid media
+    "virtual assistant": -4,
+    "data entry": -4,
+    "administrative support": -3,
+    "admin support": -3,
+    "customer support": -3,
+    "customer service": -3,
+    "video editing": -2,
+    "photo editing": -2,
+    "community management": -2,
     # Agency / subcontractor work (Zoha wants direct clients, not agency subcontracts)
     "white label": -4,
     "subcontract": -3,
@@ -150,6 +171,9 @@ _NEGATIVE_KEYWORDS = {
     "graphic design": -1,
     "copywriting": -1,        # reduced from -2 — appears in legit ad creative jobs
     "content creator": -1,
+    # One-off signals (prefer retainer work)
+    "one-time": -1,
+    "one time project": -1,
 }
 
 # ── Geo tiers ──────────────────────────────────────────────────────────────────
@@ -186,6 +210,15 @@ _COUNTRY_NAME_TO_CODE: dict[str, str] = {
     "Cambodia": "KH", "Indonesia": "ID",
     "Ukraine": "UA", "Russia": "RU", "Brazil": "BR", "Mexico": "MX",
 }
+
+
+# Lowercase country names for Tier-3 countries — used to detect geo from job title
+# when client.location isn't populated (e.g. cached jobs or API gaps)
+_TIER3_COUNTRY_NAMES = frozenset(
+    name.lower()
+    for name, code in _COUNTRY_NAME_TO_CODE.items()
+    if code in TIER3_COUNTRIES
+)
 
 
 def _to_country_code(country_str: str) -> str:
@@ -395,11 +428,13 @@ def _parse_spent(display_value):
 
 
 def _budget_score(budget_str, engagement):
-    """Return 0-2 budget score.
+    """Return budget score (-3 to +2).
 
-    Thresholds:
-      Hourly : >= $50/hr = 2,  >= $30/hr = 1
-      Fixed  : >= $2500   = 2, >= $1000  = 1
+    STN targets $50/hr+ or $2.5k+ fixed retainers.
+    Penalize sub-market rates — a $7/hr job is never a good fit.
+
+    Hourly:  >= $50/hr = +2 | >= $30 = +1 | >= $15 = 0 | < $15 = -3
+    Fixed:   >= $2500  = +2 | >= $1k  = +1 | >= $300 = 0 | < $300 = -2
     """
     is_hourly = "/hr" in budget_str or "hourly" in (engagement or "").lower()
     try:
@@ -408,9 +443,15 @@ def _budget_score(budget_str, engagement):
             .strip().split("-")[0].strip()
         )
         if is_hourly:
-            return 2 if num >= 50 else (1 if num >= 30 else 0)
+            if num >= 50: return 2
+            if num >= 30: return 1
+            if num >= 15: return 0
+            return -3   # < $15/hr — below subsistence, not a real paid media role
         else:
-            return 2 if num >= 2500 else (1 if num >= 1000 else 0)
+            if num >= 2500: return 2
+            if num >= 1000: return 1
+            if num >= 300:  return 0
+            return -2   # < $300 fixed — micro-gig, not a retainer
     except Exception:
         return 0
 
@@ -436,24 +477,35 @@ def _client_score(client, gated):
 
 
 def _score_job(job):
-    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+    # ── Build scoring text: title + description + normalised skills ────────────
+    skills_text = " ".join(job.get("skills", [])).replace("-", " ")
+    text = (job.get("title", "") + " " + job.get("description", "") + " " + skills_text).lower()
 
     # ── Keyword relevance (0–6) ────────────────────────────────────────────────
     kw_raw = sum(pts for kw, pts in _SCORE_KEYWORDS.items() if kw in text)
     kw_score = min(kw_raw, 6)
 
+    # ── Retainer / ongoing bonus (0–2, capped) ────────────────────────────────
+    retainer_bonus = min(sum(pts for kw, pts in _RETAINER_KEYWORDS.items() if kw in text), 2)
+
     # ── Negative signals ──────────────────────────────────────────────────────
     neg = sum(pts for kw, pts in _NEGATIVE_KEYWORDS.items() if kw in text)
 
-    # ── Geo score (always applied — not gated by keyword signal) ─────────────
-    geo = _geo_score((job.get("client") or {}).get("countryCode", ""))
-
-    # ── Gate: if paid-ads signal is weak, budget/client bonuses don't apply ───
-    if kw_score < 2:
-        return max(0, min(kw_score + neg + geo, 4))
-
-    # ── Budget (0–2) ──────────────────────────────────────────────────────────
+    # ── Budget (always applied — penalties even on gated jobs) ────────────────
     budget_score = _budget_score(job.get("budget", ""), job.get("engagement", ""))
+
+    # ── Geo (always applied) ──────────────────────────────────────────────────
+    geo = _geo_score((job.get("client") or {}).get("countryCode", ""))
+    # Fallback: detect Tier-3 country name from job title (catches cached/missing location)
+    if geo == 0:
+        title_lower = job.get("title", "").lower()
+        if any(name in title_lower for name in _TIER3_COUNTRY_NAMES):
+            geo = -3
+
+    # ── Gate: weak paid-ads signal → cap score, skip client/recency bonuses ───
+    # Budget penalties STILL apply even when gated (a $5/hr job is bad regardless)
+    if kw_score < 2:
+        return max(0, min(kw_score + neg + min(0, budget_score) + geo, 4))
 
     # ── Client quality (0–3) ──────────────────────────────────────────────────
     client_score = _client_score(job.get("client") or {}, gated=False)
@@ -469,28 +521,25 @@ def _score_job(job):
         except Exception:
             pass
 
-    total = kw_score + budget_score + client_score + recency + neg + geo
+    total = kw_score + retainer_bonus + budget_score + client_score + recency + neg + geo
     return max(0, min(total, 10))
 
 
 def score_breakdown(job):
-    """Return scoring components for a job (mirrors _score_job logic).
-
-    Returns dict:
-        kw_score, budget_score, client_score, recency, neg_total,
-        gated (bool), matched_pos [(kw, pts)], matched_neg [(kw, pts)],
-        spent_ok (bool), spend_str (str)
-    """
-    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+    """Return scoring components for a job (mirrors _score_job logic)."""
+    skills_text = " ".join(job.get("skills", [])).replace("-", " ")
+    text = (job.get("title", "") + " " + job.get("description", "") + " " + skills_text).lower()
 
     matched_pos = [(kw, pts) for kw, pts in _SCORE_KEYWORDS.items() if kw in text]
     matched_neg = [(kw, pts) for kw, pts in _NEGATIVE_KEYWORDS.items() if kw in text]
+    matched_retainer = [(kw, pts) for kw, pts in _RETAINER_KEYWORDS.items() if kw in text]
     kw_raw = sum(pts for _, pts in matched_pos)
     kw_score = min(kw_raw, 6)
     neg_total = sum(pts for _, pts in matched_neg)
+    retainer_bonus = min(sum(pts for _, pts in matched_retainer), 2)
     gated = kw_score < 2
 
-    budget_score = 0 if gated else _budget_score(job.get("budget", ""), job.get("engagement", ""))
+    budget_score = _budget_score(job.get("budget", ""), job.get("engagement", ""))
     client = job.get("client") or {}
     client_score = _client_score(client, gated)
 
@@ -508,6 +557,10 @@ def score_breakdown(job):
             pass
 
     geo = _geo_score(client.get("countryCode", ""))
+    if geo == 0:
+        title_lower = job.get("title", "").lower()
+        if any(name in title_lower for name in _TIER3_COUNTRY_NAMES):
+            geo = -3
 
     return {
         "kw_score": kw_score,
@@ -515,6 +568,8 @@ def score_breakdown(job):
         "client_score": client_score,
         "recency": recency,
         "neg_total": neg_total,
+        "retainer_bonus": retainer_bonus,
+        "matched_retainer": matched_retainer,
         "gated": gated,
         "matched_pos": matched_pos,
         "matched_neg": matched_neg,

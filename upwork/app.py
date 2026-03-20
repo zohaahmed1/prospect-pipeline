@@ -161,6 +161,8 @@ if "applied" not in st.session_state:
     st.session_state.applied = {e["id"] for e in _load_applied_log()}
 if "liked" not in st.session_state:
     st.session_state.liked = {e["id"] for e in _load_liked_log()}
+if "page" not in st.session_state:
+    st.session_state.page = 0
 
 
 def _save_token_to_env(token):
@@ -541,6 +543,7 @@ if search_clicked:
                         j["score_boosted"] = True
             st.session_state.jobs = jobs
             st.session_state.searched = True
+            st.session_state.page = 0   # reset to first page on new search
             _save_jobs_cache(jobs)
             if err:
                 st.warning(f"Some searches failed: {err}")
@@ -651,12 +654,18 @@ with tab_search:
                 st.session_state.dismissed = set()
                 st.rerun()
     else:
+        _PER_PAGE = 15
+        _total_pages = max(1, (len(jobs) + _PER_PAGE - 1) // _PER_PAGE)
+        _cur_page = min(st.session_state.get("page", 0), _total_pages - 1)
+        _page_jobs = jobs[_cur_page * _PER_PAGE : (_cur_page + 1) * _PER_PAGE]
+
         st.caption(
-            f"Showing {len(jobs)} of {total_found} jobs · sorted by {sort_by.lower()}"
+            f"Showing {len(jobs)} of {total_found} jobs · "
+            f"page {_cur_page + 1}/{_total_pages} · sorted by {sort_by.lower()}"
             + (f" · {dismissed_count} dismissed" if dismissed_count else "")
         )
 
-        for job in jobs:
+        for job in _page_jobs:
             jid = job["id"]
 
             with st.container(border=True):
@@ -732,8 +741,13 @@ with tab_search:
                     if bd["matched_neg"]:
                         neg_parts = [f"{pts} `{kw}`" for kw, pts in bd["matched_neg"]]
                         lines.append(f"**Negatives ({bd['neg_total']}):** {' · '.join(neg_parts)}")
-                    if bd["budget_score"]:
-                        lines.append(f"**Budget:** +{bd['budget_score']} (hourly ≥$30/hr · fixed ≥$1k)")
+                    if bd["budget_score"] != 0:
+                        bscore = bd["budget_score"]
+                        sign = "+" if bscore > 0 else ""
+                        lines.append(f"**Budget:** {sign}{bscore}")
+                    if bd.get("retainer_bonus"):
+                        r_parts = [f"+{pts} `{kw}`" for kw, pts in bd["matched_retainer"]]
+                        lines.append(f"**Retainer signals:** +{bd['retainer_bonus']} · {' · '.join(r_parts)}")
                     if bd["client_score"]:
                         spend_note = f" · {bd['spend_str']} spent ✓" if bd["spent_ok"] and bd["spend_str"] else ""
                         lines.append(f"**Client:** +{bd['client_score']}{spend_note}")
@@ -890,6 +904,25 @@ with tab_search:
                         else:
                             if edited_proposal != proposal_part.strip():
                                 st.session_state.proposals[jid] = edited_proposal
+
+    # ── Pagination controls ────────────────────────────────────────────────────
+    if _total_pages > 1:
+        st.divider()
+        _pc1, _pc2, _pc3 = st.columns([1, 2, 1])
+        with _pc1:
+            if st.button("← Prev", disabled=_cur_page == 0, use_container_width=True):
+                st.session_state.page = _cur_page - 1
+                st.rerun()
+        with _pc2:
+            st.markdown(
+                f"<div style='text-align:center;padding-top:6px;font-size:13px'>"
+                f"Page {_cur_page + 1} of {_total_pages}</div>",
+                unsafe_allow_html=True,
+            )
+        with _pc3:
+            if st.button("Next →", disabled=_cur_page == _total_pages - 1, use_container_width=True):
+                st.session_state.page = _cur_page + 1
+                st.rerun()
 
     # ── Applied Jobs section ───────────────────────────────────────────────────
     applied_log = _load_applied_log()
