@@ -72,6 +72,9 @@ _HEADERS_BASE = {
 KEYWORD_GROUPS = {
     "Reddit Ads": ["reddit ads", "reddit advertising"],
     "Meta / Facebook Ads": ["meta ads", "facebook ads", "facebook advertising"],
+    "LinkedIn Ads": ["linkedin ads", "linkedin advertising", "linkedin paid"],
+    "Pinterest Ads": ["pinterest ads", "pinterest advertising"],
+    "Snapchat Ads": ["snapchat ads", "snapchat advertising"],
     "Campaign Management": ["campaign management", "ads manager", "media buyer"],
     "Creative Strategist": ["creative strategist", "ad creative", "ugc creative"],
     "B2B SaaS Paid": ["b2b saas ads", "saas paid media", "b2b paid ads"],
@@ -80,35 +83,73 @@ KEYWORD_GROUPS = {
     "Performance Marketing": ["performance marketing", "paid media specialist"],
 }
 
-# Weights based on win-rate analysis of 312 wins / 1225 proposals
+# Positive keyword scores — specific paid-ads signals only.
 _SCORE_KEYWORDS = {
-    # Highest win-rate signals (35-41%)
-    "campaign management": 3,
-    "creative strategist": 3,
-    "creative strategy": 3,
-    "campaign setup": 3,
-    "dtc": 3,
-    # Strong signals (28-32%)
-    "reddit": 3,
-    "meta ads": 2,
-    "google ads": 2,
-    "campaign": 2,
-    "performance marketing": 2,
-    "paid media": 2,
-    "paid social": 2,
-    "media buyer": 2,
+    # Core services — highest specificity (4 pts)
+    "reddit ads": 4,
+    "reddit advertising": 4,
+    # Strong paid-ads role signals (3 pts)
+    "meta ads": 3,
+    "facebook ads": 3,
+    "facebook advertising": 3,
+    "media buyer": 3,
+    "paid social": 3,
+    "performance marketing": 3,
+    "paid media": 3,
+    "ppc": 3,               # pay-per-click — strong paid signal
+    "paid search": 3,       # SEM / Google Ads context
+    # Specific paid-ads tactics (2 pts)
+    "creative strategist": 2,
+    "creative strategy": 2,
+    "campaign management": 2,  # dropped from 3 — too generic (email, SEO also use it)
+    "ads manager": 2,          # role-specific
+    "social ads": 2,           # paid social shorthand
     "ad creative": 2,
-    "b2b saas": 2,
+    "campaign setup": 2,
     "roas": 2,
-    # Supporting signals
-    "facebook ads": 1,
+    "google ads": 2,
+    "tiktok ads": 2,
+    "sem": 2,
+    "retargeting": 2,
+    "ugc ads": 2,
+    "dtc ads": 2,
+    "ecommerce ads": 2,
+    "b2b saas ads": 2,
+    "paid advertising": 2,
+    "cpc": 2,
+    # Contextual (1 pt) — only useful when other signals already present
+    "dtc": 1,
     "ecommerce": 1,
-    "ecomm": 1,
-    "saas": 1,
-    "instagram": 1,
-    "agency": 1,
-    "cpa": 1,
-    "cpl": 1,
+    "shopify ads": 1,
+    "b2b paid": 1,
+    "lookalike": 1,
+    "conversion rate": 1,
+}
+
+# Negative signals — deduct for clear wrong-fits
+_NEGATIVE_KEYWORDS = {
+    # Completely wrong service type
+    "seo": -3,
+    "search engine optimization": -3,
+    # Agency / subcontractor work (Zoha wants direct clients, not agency subcontracts)
+    "white label": -4,
+    "subcontract": -3,
+    "for our clients": -2,    # agency posting on behalf of their clients
+    "our agency": -2,
+    "digital agency": -2,
+    # Organic / non-paid work
+    "social media management": -2,
+    "organic social": -2,
+    "content writing": -2,
+    "web design": -2,
+    "website development": -2,
+    "wordpress": -2,
+    "influencer marketing": -2,
+    "email marketing": -1,
+    "email campaign": -1,
+    "graphic design": -1,
+    "copywriting": -1,        # reduced from -2 — appears in legit ad creative jobs
+    "content creator": -1,
 }
 
 _last_api_error = None
@@ -202,6 +243,7 @@ query SearchJobs($searchExpr: String!) {
       searchExpression_eq: $searchExpr
       verifiedPaymentOnly_eq: true
     }
+    paging: { first: 50, offset: 0 }
   ) {
     totalCount
     edges {
@@ -229,6 +271,43 @@ query SearchJobs($searchExpr: String!) {
 }
 """
 
+_REST_JOB_BASE = "https://api.upwork.com/api/profiles/v2/jobs"
+
+
+def fetch_job_questions(job_id, ciphertext=None, token=None):
+    """Fetch screening questions via Upwork REST API.
+
+    GraphQL does not expose the questions field on MarketplaceJobPosting.
+    Falls back to REST: tries ciphertext first, then internal node ID.
+    Returns (questions_list, error_str). error_str is None on success.
+    """
+    tok = token or STORED_ACCESS_TOKEN
+    if not tok:
+        return [], "No access token available."
+
+    for lookup in filter(None, [ciphertext, job_id]):
+        try:
+            resp = requests.get(
+                f"{_REST_JOB_BASE}/{lookup}.json",
+                headers={**_HEADERS_BASE, "Authorization": f"Bearer {tok}"},
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                # Questions can live under several field names depending on API version
+                for field in ("questions", "screeningQuestions", "clientQuestions", "job_questions"):
+                    raw = data.get(field) or []
+                    if raw:
+                        return [
+                            (q if isinstance(q, str) else q.get("question") or q.get("text") or str(q)).strip()
+                            for q in raw if q
+                        ], None
+                return [], None  # 200 but no questions on this job
+        except Exception as e:
+            continue  # try next lookup key
+
+    return [], "Screening questions aren't accessible via Upwork's API for this job."
+
 
 def _fmt_money(val):
     """Format '100.0' → '$100', '15.5' → '$16'."""
@@ -241,49 +320,143 @@ def _fmt_money(val):
         return str(val) if val else ""
 
 
-def _score_job(job):
-    score = 0
-    text = (job.get("title", "") + " " + job.get("description", "")).lower()
-    kw_score = sum(pts for kw, pts in _SCORE_KEYWORDS.items() if kw in text)
-    # Cap at 4 — every result is already payment-verified (we filter verifiedPaymentOnly_eq:
-    # true), so keywords + budget + client quality + recency drive differentiation
-    score += min(kw_score, 4)
+def _parse_spent(display_value):
+    """Parse Upwork's totalSpent displayValue ('$25K', '$1.2M', '$500') → float."""
+    try:
+        s = (display_value or "").replace("$", "").replace(",", "").strip().upper()
+        if not s or s in ("+", ""):
+            return 0.0
+        if s.endswith("K"):
+            return float(s[:-1]) * 1_000
+        if s.endswith("M"):
+            return float(s[:-1]) * 1_000_000
+        return float(s)
+    except Exception:
+        return 0.0
 
-    budget_str = job.get("budget", "")
-    engagement = job.get("engagement", "").lower()
-    is_hourly = "/hr" in budget_str or "hourly" in engagement
+
+def _budget_score(budget_str, engagement):
+    """Return 0-2 budget score.
+
+    Thresholds:
+      Hourly : >= $50/hr = 2,  >= $30/hr = 1
+      Fixed  : >= $2500   = 2, >= $1000  = 1
+    """
+    is_hourly = "/hr" in budget_str or "hourly" in (engagement or "").lower()
     try:
         num = float(
             budget_str.replace("$", "").replace(",", "").replace("/hr", "")
             .strip().split("-")[0].strip()
         )
         if is_hourly:
-            # Hourly: $15-50/hr is the win sweet spot; $50+ is premium
-            score += 3 if num >= 50 else (2 if num >= 15 else 0)
+            return 2 if num >= 50 else (1 if num >= 30 else 0)
         else:
-            # Fixed: $1k-3k is the win sweet spot (28 wins), $3k+ also good
-            score += 3 if 1000 <= num <= 3000 else (2 if num > 3000 else (1 if num >= 500 else 0))
+            return 2 if num >= 2500 else (1 if num >= 1000 else 0)
     except Exception:
-        pass
+        return 0
 
-    # Payment verification not scored — all results are verified (filtered above)
-    client = job.get("client") or {}
+
+def _client_score(client, gated):
+    """Return 0-3 client quality score.
+
+    +1 rating >= 4.5
+    +1 jobs posted >= 5
+    +1 total platform spend >= $20k  (signals serious, repeat buyer)
+    """
+    if gated:
+        return 0
+    score = 0
     if float(client.get("totalFeedback") or 0) >= 4.5:
         score += 1
-    if int(client.get("totalPostedJobs") or 0) >= 10:
+    if int(client.get("totalPostedJobs") or 0) >= 5:
         score += 1
+    spent_str = (client.get("totalSpent") or {}).get("amount", "")
+    if _parse_spent(spent_str) >= 20_000:
+        score += 1
+    return score
 
+
+def _score_job(job):
+    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+
+    # ── Keyword relevance (0–6) ────────────────────────────────────────────────
+    kw_raw = sum(pts for kw, pts in _SCORE_KEYWORDS.items() if kw in text)
+    kw_score = min(kw_raw, 6)
+
+    # ── Negative signals ──────────────────────────────────────────────────────
+    neg = sum(pts for kw, pts in _NEGATIVE_KEYWORDS.items() if kw in text)
+
+    # ── Gate: if paid-ads signal is weak, budget/client bonuses don't apply ───
+    if kw_score < 2:
+        return max(0, min(kw_score + neg, 4))
+
+    # ── Budget (0–2) ──────────────────────────────────────────────────────────
+    budget_score = _budget_score(job.get("budget", ""), job.get("engagement", ""))
+
+    # ── Client quality (0–3) ──────────────────────────────────────────────────
+    client_score = _client_score(job.get("client") or {}, gated=False)
+
+    # ── Recency (0–1) ─────────────────────────────────────────────────────────
+    recency = 0
     created = job.get("created", "")
     if created:
         try:
             dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
-            age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600
-            if age_hours <= 48:
-                score += 1
+            if (datetime.now(timezone.utc) - dt).total_seconds() / 3600 <= 48:
+                recency = 1
         except Exception:
             pass
 
-    return min(score, 10)
+    total = kw_score + budget_score + client_score + recency + neg
+    return max(0, min(total, 10))
+
+
+def score_breakdown(job):
+    """Return scoring components for a job (mirrors _score_job logic).
+
+    Returns dict:
+        kw_score, budget_score, client_score, recency, neg_total,
+        gated (bool), matched_pos [(kw, pts)], matched_neg [(kw, pts)],
+        spent_ok (bool), spend_str (str)
+    """
+    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+
+    matched_pos = [(kw, pts) for kw, pts in _SCORE_KEYWORDS.items() if kw in text]
+    matched_neg = [(kw, pts) for kw, pts in _NEGATIVE_KEYWORDS.items() if kw in text]
+    kw_raw = sum(pts for _, pts in matched_pos)
+    kw_score = min(kw_raw, 6)
+    neg_total = sum(pts for _, pts in matched_neg)
+    gated = kw_score < 2
+
+    budget_score = 0 if gated else _budget_score(job.get("budget", ""), job.get("engagement", ""))
+    client = job.get("client") or {}
+    client_score = _client_score(client, gated)
+
+    spend_str = (client.get("totalSpent") or {}).get("amount", "")
+    spent_ok = _parse_spent(spend_str) >= 20_000
+
+    recency = 0
+    created = job.get("created", "")
+    if created and not gated:
+        try:
+            dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            if (datetime.now(timezone.utc) - dt).total_seconds() / 3600 <= 48:
+                recency = 1
+        except Exception:
+            pass
+
+    return {
+        "kw_score": kw_score,
+        "budget_score": budget_score,
+        "client_score": client_score,
+        "recency": recency,
+        "neg_total": neg_total,
+        "gated": gated,
+        "matched_pos": matched_pos,
+        "matched_neg": matched_neg,
+        "spent_ok": spent_ok,
+        "spend_str": spend_str,
+    }
 
 
 def search_jobs(keywords, job_type="all", limit=30, token=None):
@@ -338,6 +511,7 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
             ciphertext = node.get("ciphertext", "")
             job = {
                 "id": jid,
+                "ciphertext": ciphertext,  # ~022... format used for job detail lookups
                 "title": node.get("title", ""),
                 "description": node.get("description", ""),
                 "budget": budget,
@@ -346,6 +520,7 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
                 "client": client,
                 "created": node.get("createdDateTime", ""),
                 "url": f"https://www.upwork.com/jobs/{ciphertext}" if ciphertext else "",
+                "questions": [],  # fetched on-demand via fetch_job_questions()
             }
 
             if job_type == "hourly" and not is_hourly:
@@ -357,3 +532,27 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
             seen[jid] = job
 
     return sorted(seen.values(), key=lambda j: j["score"], reverse=True)[:limit]
+
+
+def learned_boost(job, liked_jobs):
+    """Return 0-2 extra score points based on patterns from jobs the user liked.
+
+    Algorithm: count keyword frequency across all liked jobs. For each keyword
+    that also appears in this job, weight its contribution by how often it
+    appeared in liked jobs (frequency ratio). Cap final boost at 2.
+    """
+    if not liked_jobs:
+        return 0
+    from collections import Counter
+    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+    kw_freq = Counter()
+    for lj in liked_jobs:
+        for kw in lj.get("keywords_matched", []):
+            kw_freq[kw] += 1
+    total = len(liked_jobs)
+    boost_raw = sum(
+        (count / total) * _SCORE_KEYWORDS.get(kw, 1)
+        for kw, count in kw_freq.items()
+        if kw in text
+    )
+    return min(2, int(boost_raw))
