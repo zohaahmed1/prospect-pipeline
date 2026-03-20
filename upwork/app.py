@@ -282,6 +282,46 @@ def _job_budget_value(job):
     return 0
 
 
+def _passes_budget_filter(job, min_hourly: float, min_fixed: float) -> bool:
+    """Return True if the job's budget meets the minimum for its type.
+
+    Hourly jobs are checked against min_hourly, fixed-price against min_fixed.
+    Jobs with no parseable budget are always included (don't filter them out).
+    """
+    if min_hourly == 0 and min_fixed == 0:
+        return True
+    import re
+    budget = str(job.get("budget", ""))
+    is_hourly = "/hr" in budget
+    nums = re.findall(r"\d[\d,]*", budget)
+    if not nums:
+        return True  # unknown budget — keep it
+    try:
+        val = float(nums[0].replace(",", ""))
+    except Exception:
+        return True
+    if is_hourly:
+        return min_hourly == 0 or val >= min_hourly
+    else:
+        return min_fixed == 0 or val >= min_fixed
+
+
+def _client_spent_value(client: dict) -> float:
+    """Parse a client's totalSpent displayValue ('$25K', '$1.2M') → float."""
+    display = (client.get("totalSpent") or {}).get("amount", "")
+    if not display:
+        return 0.0
+    s = display.replace("$", "").replace(",", "").strip().upper()
+    try:
+        if s.endswith("K"):
+            return float(s[:-1]) * 1_000
+        if s.endswith("M"):
+            return float(s[:-1]) * 1_000_000
+        return float(s)
+    except Exception:
+        return 0.0
+
+
 def _copy_button(text: str, key: str):
     """Browser clipboard copy button via injected JS (works on Streamlit Cloud HTTPS)."""
     safe_id = "".join(c for c in key if c.isalnum() or c == "_")
@@ -369,6 +409,32 @@ with st.sidebar:
         value=True,
         help="Filter out jobs from clients in India, Pakistan, Philippines, Nigeria, Bangladesh, etc.",
     )
+
+    st.caption("💵 Minimum budget")
+    _hourly_opts = ["Any", "$25/hr", "$30/hr", "$40/hr", "$50/hr", "$75/hr", "$100/hr"]
+    _fixed_opts  = ["Any", "$500", "$1k", "$2.5k", "$5k", "$10k"]
+    col_h, col_f = st.columns(2)
+    with col_h:
+        min_hourly_label = st.selectbox("Hourly", _hourly_opts, index=0, key="min_hourly",
+                                        label_visibility="collapsed")
+    with col_f:
+        min_fixed_label  = st.selectbox("Fixed",  _fixed_opts,  index=0, key="min_fixed",
+                                        label_visibility="collapsed")
+    _hourly_map = {"Any": 0, "$25/hr": 25, "$30/hr": 30, "$40/hr": 40,
+                   "$50/hr": 50, "$75/hr": 75, "$100/hr": 100}
+    _fixed_map  = {"Any": 0, "$500": 500, "$1k": 1_000, "$2.5k": 2_500,
+                   "$5k": 5_000, "$10k": 10_000}
+    min_hourly_val = _hourly_map[min_hourly_label]
+    min_fixed_val  = _fixed_map[min_fixed_label]
+
+    min_spent_label = st.selectbox(
+        "💰 Min client total spent",
+        ["Any", "$1k+", "$5k+", "$10k+", "$20k+", "$50k+"],
+        index=0,
+    )
+    _spent_map = {"Any": 0, "$1k+": 1_000, "$5k+": 5_000, "$10k+": 10_000,
+                  "$20k+": 20_000, "$50k+": 50_000}
+    min_spent_val = _spent_map[min_spent_label]
 
     sort_by = st.selectbox(
         "Sort by",
@@ -563,6 +629,8 @@ with tab_search:
         and (posted_hours is None or _job_hours_old(j) <= posted_hours)
         and (not hide_tier3
              or (j.get("client") or {}).get("countryCode", "") not in TIER3_COUNTRIES)
+        and _passes_budget_filter(j, min_hourly_val, min_fixed_val)
+        and _client_spent_value(j.get("client") or {}) >= min_spent_val
     ]
 
     # Sort
