@@ -379,9 +379,24 @@ if not is_authed:
         if not has_client_credentials():
             st.error("Add `UPWORK_CLIENT_ID` and `UPWORK_CLIENT_SECRET` to your `.env` file first.")
             st.stop()
-        auth_url = get_auth_url()
-        st.markdown(f"**[Click here to authorize on Upwork]({auth_url})**")
-        st.info("After approving, Upwork will redirect you back here automatically and connect.")
+
+        tab_token, tab_oauth = st.tabs(["🔑 Paste Token", "🔗 OAuth Flow"])
+
+        with tab_token:
+            st.caption("Paste an Upwork access token directly. Get one from your local dev setup or Upwork API console.")
+            _pasted = st.text_input("Access token", type="password", placeholder="oauth2v2_...")
+            if st.button("Connect", type="primary", key="connect_token"):
+                if _pasted.strip():
+                    st.session_state.access_token = _pasted.strip()
+                    st.session_state.disconnected = False
+                    st.rerun()
+                else:
+                    st.warning("Paste a token first.")
+
+        with tab_oauth:
+            auth_url = get_auth_url()
+            st.markdown(f"**[Click here to authorize on Upwork]({auth_url})**")
+            st.info("Only works when running locally (localhost:8502). On Streamlit Cloud, use the **Paste Token** tab instead.")
     st.stop()
 
 # ── Sidebar: Search Controls ───────────────────────────────────────────────────
