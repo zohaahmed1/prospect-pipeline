@@ -23,6 +23,7 @@ from upwork_api import (
     search_jobs,
     fetch_job_questions,
     get_last_api_error,
+    get_all_api_errors,
     score_breakdown,
     learned_boost,
 )
@@ -154,7 +155,10 @@ if "jobs" not in st.session_state:
 if "proposals" not in st.session_state:
     st.session_state.proposals = _load_proposals_cache()
 if "searched" not in st.session_state:
+    # Mark as searched only if we have cached results (so UI shows them),
+    # but flag them as stale so the user knows to re-search
     st.session_state.searched = bool(st.session_state.jobs)
+    st.session_state.setdefault("stale_cache", bool(st.session_state.jobs))
 if "dismissed" not in st.session_state:
     st.session_state.dismissed = set()
 if "applied" not in st.session_state:
@@ -537,14 +541,16 @@ if search_clicked:
             jobs = search_jobs(
                 keywords,
                 job_type=job_type_param,
-                limit=50,
+                limit=100,
                 token=st.session_state.access_token,
             )
-        err = get_last_api_error()
-        if err and not jobs:
-            st.error(f"Search failed: {err}")
-            if "401" in str(err) or "403" in str(err):
-                st.warning("⚠️ Token expired. Click **Disconnect** in the sidebar and reconnect to Upwork.")
+        all_errs = get_all_api_errors()
+        # Check for auth failures across ANY keyword (not just the last one)
+        _auth_fail = any("401" in e or "403" in e for e in all_errs)
+        if _auth_fail:
+            st.error("⚠️ Token expired or invalid. Click **Disconnect** in the sidebar and reconnect to Upwork.")
+        elif not jobs and all_errs:
+            st.error(f"Search failed: {all_errs[0]}")
         else:
             # Apply learned boost from liked jobs before caching
             _liked = _load_liked_log()
@@ -556,11 +562,12 @@ if search_clicked:
                         j["score_boosted"] = True
             st.session_state.jobs = jobs
             st.session_state.searched = True
+            st.session_state.stale_cache = False
             st.session_state.page = 0   # reset to first page on new search
             st.session_state.last_searched = datetime.now(timezone.utc).strftime("%b %d, %I:%M %p UTC")
             _save_jobs_cache(jobs)
-            if err:
-                st.warning(f"Some searches failed: {err}")
+            if all_errs and not _auth_fail:
+                st.warning(f"⚠️ {len(all_errs)} keyword(s) failed. {all_errs[0]}")
 
 # ── Tabs: Search Results | Paste a Job ────────────────────────────────────────
 tab_search, tab_paste = st.tabs(["🔍 Search Results", "📋 Paste a Job"])
@@ -636,6 +643,8 @@ with tab_paste:
                 _copy_button(edited_paste_qa, "paste_qa")
 
 with tab_search:
+  if st.session_state.get("stale_cache"):
+    st.warning("⚠️ Showing cached results from a previous session. Hit **🔍 Search Jobs** to get fresh posts.")
   if st.session_state.searched:
     # Filter — applied jobs move to their own section below
     jobs = [
@@ -920,24 +929,24 @@ with tab_search:
                             if edited_proposal != proposal_part.strip():
                                 st.session_state.proposals[jid] = edited_proposal
 
-    # ── Pagination controls ────────────────────────────────────────────────────
-    if _total_pages > 1:
-        st.divider()
-        _pc1, _pc2, _pc3 = st.columns([1, 2, 1])
-        with _pc1:
-            if st.button("← Prev", disabled=_cur_page == 0, use_container_width=True):
-                st.session_state.page = _cur_page - 1
-                st.rerun()
-        with _pc2:
-            st.markdown(
-                f"<div style='text-align:center;padding-top:6px;font-size:13px'>"
-                f"Page {_cur_page + 1} of {_total_pages}</div>",
-                unsafe_allow_html=True,
-            )
-        with _pc3:
-            if st.button("Next →", disabled=_cur_page == _total_pages - 1, use_container_width=True):
-                st.session_state.page = _cur_page + 1
-                st.rerun()
+        # ── Pagination controls ────────────────────────────────────────────
+        if _total_pages > 1:
+            st.divider()
+            _pc1, _pc2, _pc3 = st.columns([1, 2, 1])
+            with _pc1:
+                if st.button("← Prev", disabled=_cur_page == 0, use_container_width=True):
+                    st.session_state.page = _cur_page - 1
+                    st.rerun()
+            with _pc2:
+                st.markdown(
+                    f"<div style='text-align:center;padding-top:6px;font-size:13px'>"
+                    f"Page {_cur_page + 1} of {_total_pages}</div>",
+                    unsafe_allow_html=True,
+                )
+            with _pc3:
+                if st.button("Next →", disabled=_cur_page == _total_pages - 1, use_container_width=True):
+                    st.session_state.page = _cur_page + 1
+                    st.rerun()
 
     # ── Applied Jobs section ───────────────────────────────────────────────────
     applied_log = _load_applied_log()

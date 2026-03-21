@@ -244,10 +244,16 @@ def _geo_score(country_code: str) -> int:
 
 
 _last_api_error = None
+_api_errors: list[str] = []   # accumulates all errors across a search run
 
 
 def get_last_api_error():
     return _last_api_error
+
+
+def get_all_api_errors() -> list[str]:
+    """Return all errors accumulated during the last search_jobs() call."""
+    return list(_api_errors)
 
 
 def has_client_credentials():
@@ -327,15 +333,7 @@ def _gql(query, variables=None, token=None):
         return None
 
 
-_JOB_SEARCH_QUERY = """
-query SearchJobs($searchExpr: String!) {
-  marketplaceJobPostingsSearch(
-    marketPlaceJobFilter: {
-      searchExpression_eq: $searchExpr
-      verifiedPaymentOnly_eq: true
-    }
-    paging: { first: 50, offset: 0 }
-  ) {
+_JOB_SEARCH_FIELDS = """
     totalCount
     edges {
       node {
@@ -358,6 +356,34 @@ query SearchJobs($searchExpr: String!) {
         }
       }
     }
+"""
+
+_JOB_SEARCH_QUERY = """
+query SearchJobs($searchExpr: String!, $offset: Int!) {
+  marketplaceJobPostingsSearch(
+    marketPlaceJobFilter: {
+      searchExpression_eq: $searchExpr
+      verifiedPaymentOnly_eq: true
+    }
+    sortAttributes: { field: "recency", sortOrder: "desc" }
+    paging: { first: 50, offset: $offset }
+  ) {
+""" + _JOB_SEARCH_FIELDS + """
+  }
+}
+"""
+
+# Fallback query without sortAttributes (in case Upwork's schema doesn't support it)
+_JOB_SEARCH_QUERY_FALLBACK = """
+query SearchJobs($searchExpr: String!, $offset: Int!) {
+  marketplaceJobPostingsSearch(
+    marketPlaceJobFilter: {
+      searchExpression_eq: $searchExpr
+      verifiedPaymentOnly_eq: true
+    }
+    paging: { first: 50, offset: $offset }
+  ) {
+""" + _JOB_SEARCH_FIELDS + """
   }
 }
 """
@@ -586,85 +612,99 @@ def search_jobs(keywords, job_type="all", limit=30, token=None):
     Returns deduplicated, score-sorted list of job dicts:
       id, title, description, budget, engagement, skills, client, score, created
     """
+    global _api_errors
+    _api_errors = []
     seen = {}
+    _query = _JOB_SEARCH_QUERY  # will fall back to _JOB_SEARCH_QUERY_FALLBACK if needed
     for kw in keywords:
-        data = _gql(
-            _JOB_SEARCH_QUERY,
-            {"searchExpr": kw},
-            token=token,
-        )
-        if not data:
-            continue
-        postings = data.get("marketplaceJobPostingsSearch") or {}
-        for edge in postings.get("edges") or []:
-            node = edge.get("node") or {}
-            jid = node.get("id")
-            if not jid or jid in seen:
-                continue
+        # Fetch up to 2 pages (100 jobs) per keyword, sorted by recency
+        for _offset in (0, 50):
+            data = _gql(
+                _query,
+                {"searchExpr": kw, "offset": _offset},
+                token=token,
+            )
+            # If the very first call fails with a GraphQL error, try the fallback query
+            if not data and not seen and _query == _JOB_SEARCH_QUERY and "GraphQL" in (_last_api_error or ""):
+                _query = _JOB_SEARCH_QUERY_FALLBACK
+                data = _gql(_query, {"searchExpr": kw, "offset": _offset}, token=token)
+            if not data:
+                if _offset == 0:
+                    _api_errors.append(f"{kw}: {_last_api_error}")
+                break  # don't try page 2 if page 1 failed
+            postings = data.get("marketplaceJobPostingsSearch") or {}
+            edges = postings.get("edges") or []
+            if not edges:
+                break  # no more results for this keyword
+            for edge in edges:
+                node = edge.get("node") or {}
+                jid = node.get("id")
+                if not jid or jid in seen:
+                    continue
 
-            # Budget: prefer hourly range, fall back to fixed amount
-            engagement = node.get("engagement") or ""
-            is_hourly = bool(node.get("hourlyBudgetType")) or bool(node.get("hourlyBudgetMin"))
-            if is_hourly:
-                lo_raw = (node.get("hourlyBudgetMin") or {}).get("rawValue", "")
-                hi_raw = (node.get("hourlyBudgetMax") or {}).get("rawValue", "")
-                lo = _fmt_money(lo_raw)
-                hi = _fmt_money(hi_raw)
-                if lo and hi:
-                    budget = f"{lo}-{hi}/hr"
-                elif lo:
-                    budget = f"{lo}+/hr"
+                # Budget: prefer hourly range, fall back to fixed amount
+                engagement = node.get("engagement") or ""
+                is_hourly = bool(node.get("hourlyBudgetType")) or bool(node.get("hourlyBudgetMin"))
+                if is_hourly:
+                    lo_raw = (node.get("hourlyBudgetMin") or {}).get("rawValue", "")
+                    hi_raw = (node.get("hourlyBudgetMax") or {}).get("rawValue", "")
+                    lo = _fmt_money(lo_raw)
+                    hi = _fmt_money(hi_raw)
+                    if lo and hi:
+                        budget = f"{lo}-{hi}/hr"
+                    elif lo:
+                        budget = f"{lo}+/hr"
+                    else:
+                        budget = "Hourly"
                 else:
-                    budget = "Hourly"
-            else:
-                raw = (node.get("amount") or {}).get("rawValue", "")
-                budget = _fmt_money(raw) or "N/A"
+                    raw = (node.get("amount") or {}).get("rawValue", "")
+                    budget = _fmt_money(raw) or "N/A"
 
-            # Client info — normalise field names
-            raw_client = node.get("client") or {}
-            client = {
-                "paymentVerificationStatus": "VERIFIED" if raw_client.get("verificationStatus") == "VERIFIED" else "",
-                "totalFeedback": raw_client.get("totalFeedback", 0),
-                "totalPostedJobs": raw_client.get("totalPostedJobs", 0),
-                "totalSpent": {"amount": (raw_client.get("totalSpent") or {}).get("displayValue", "")},
-                "country": "",
-                "countryCode": "",
-            }
+                # Client info — normalise field names
+                raw_client = node.get("client") or {}
+                client = {
+                    "paymentVerificationStatus": "VERIFIED" if raw_client.get("verificationStatus") == "VERIFIED" else "",
+                    "totalFeedback": raw_client.get("totalFeedback", 0),
+                    "totalPostedJobs": raw_client.get("totalPostedJobs", 0),
+                    "totalSpent": {"amount": (raw_client.get("totalSpent") or {}).get("displayValue", "")},
+                    "country": "",
+                    "countryCode": "",
+                }
 
-            ciphertext = node.get("ciphertext", "")
-            job = {
-                "id": jid,
-                "ciphertext": ciphertext,  # ~022... format used for job detail lookups
-                "title": node.get("title", ""),
-                "description": node.get("description", ""),
-                "budget": budget,
-                "engagement": engagement,
-                "skills": [s.get("name", "") for s in (node.get("skills") or [])],
-                "client": client,
-                "created": node.get("createdDateTime", ""),
-                "url": f"https://www.upwork.com/jobs/{ciphertext}" if ciphertext else "",
-                "questions": [],  # fetched on-demand via fetch_job_questions()
-            }
+                ciphertext = node.get("ciphertext", "")
+                job = {
+                    "id": jid,
+                    "ciphertext": ciphertext,
+                    "title": node.get("title", ""),
+                    "description": node.get("description", ""),
+                    "budget": budget,
+                    "engagement": engagement,
+                    "skills": [s.get("name", "") for s in (node.get("skills") or [])],
+                    "client": client,
+                    "created": node.get("createdDateTime", ""),
+                    "url": f"https://www.upwork.com/jobs/{ciphertext}" if ciphertext else "",
+                    "questions": [],
+                }
 
-            if job_type == "hourly" and not is_hourly:
-                continue
-            if job_type == "fixed" and is_hourly:
-                continue
+                if job_type == "hourly" and not is_hourly:
+                    continue
+                if job_type == "fixed" and is_hourly:
+                    continue
 
-            # Title-based Tier-3 country detection (API doesn't expose client location)
-            title_lower = (node.get("title") or "").lower()
-            for name in _TIER3_COUNTRY_NAMES:
-                if name in title_lower:
-                    code = _COUNTRY_NAME_TO_CODE.get(
-                        next((n for n, c in _COUNTRY_NAME_TO_CODE.items() if n.lower() == name), ""), ""
-                    )
-                    if code:
-                        client["country"] = name.title()
-                        client["countryCode"] = code
-                    break
+                # Title-based Tier-3 country detection (API doesn't expose client location)
+                title_lower = (node.get("title") or "").lower()
+                for name in _TIER3_COUNTRY_NAMES:
+                    if name in title_lower:
+                        code = _COUNTRY_NAME_TO_CODE.get(
+                            next((n for n, c in _COUNTRY_NAME_TO_CODE.items() if n.lower() == name), ""), ""
+                        )
+                        if code:
+                            client["country"] = name.title()
+                            client["countryCode"] = code
+                        break
 
-            job["score"] = _score_job(job)
-            seen[jid] = job
+                job["score"] = _score_job(job)
+                seen[jid] = job
 
     return sorted(seen.values(), key=lambda j: j["score"], reverse=True)[:limit]
 
