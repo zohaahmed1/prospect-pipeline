@@ -148,6 +148,8 @@ st.set_page_config(
 )
 
 # ── Session state init ─────────────────────────────────────────────────────────
+if "disconnected" not in st.session_state:
+    st.session_state.disconnected = False
 if "access_token" not in st.session_state:
     st.session_state.access_token = STORED_ACCESS_TOKEN
 if "jobs" not in st.session_state:
@@ -200,6 +202,7 @@ if _oauth_code and not st.session_state.access_token:
     if _result and "access_token" in _result:
         _token = _result["access_token"]
         st.session_state.access_token = _token
+        st.session_state.disconnected = False
         st.query_params.clear()
         _save_token_to_env(_token)
         st.rerun()
@@ -368,7 +371,7 @@ st.title("🎯 Upwork Job Finder")
 st.caption("Skip the Noise Media — Reddit Certified Partner")
 
 # ── Auth check ────────────────────────────────────────────────────────────────
-is_authed = bool(st.session_state.access_token)
+is_authed = bool(st.session_state.access_token) and not st.session_state.disconnected
 
 if not is_authed:
     with st.container(border=True):
@@ -517,6 +520,7 @@ with st.sidebar:
 
     if st.button("Disconnect", use_container_width=True):
         st.session_state.access_token = ""
+        st.session_state.disconnected = True
         st.session_state.jobs = []
         st.session_state.proposals = {}
         st.session_state.searched = False
@@ -548,7 +552,11 @@ if search_clicked:
         # Check for auth failures across ANY keyword (not just the last one)
         _auth_fail = any("401" in e or "403" in e for e in all_errs)
         if _auth_fail:
-            st.error("⚠️ Token expired or invalid. Click **Disconnect** in the sidebar and reconnect to Upwork.")
+            st.error("⚠️ Token expired or invalid. Reconnect to Upwork below.")
+            if st.button("🔄 Reconnect to Upwork", type="primary"):
+                st.session_state.access_token = ""
+                st.session_state.disconnected = True
+                st.rerun()
         elif not jobs and all_errs:
             st.error(f"Search failed: {all_errs[0]}")
         else:
