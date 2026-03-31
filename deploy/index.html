@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skip the Noise Media | Performance Creative + Media Buying</title>
+<meta name="description" content="We make the ads. We run the ads. We prove they work. GroupM trained strategists. AI accelerated production. One team from creative to conversion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg-dark: #08081a;
+  --bg-dark-alt: #0e0e28;
+  --bg-light: #ffffff;
+  --bg-cream: #f5f2ee;
+  --bg-gray: #fafafa;
+  --text-light: #ffffff;
+  --text-muted: rgba(255,255,255,0.5);
+  --text-dark: #1a1a4e;
+  --text-dark-muted: #5a5a7a;
+  --red: #ee0033;
+  --red-glow: rgba(238,0,51,0.25);
+  --purple: #5500dd;
+  --purple-glow: rgba(85,0,221,0.25);
+  --navy: #1a1a4e;
+  --gradient: linear-gradient(135deg, #ee0033, #5500dd);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --card-border-hover: rgba(238,0,51,0.3);
+  --radius-card: 16px;
+  --radius-btn: 10px;
+  --radius-img: 12px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-light);
+  color: var(--text-dark);
+  font-weight: 400;
+  line-height: 1.6;
+  font-size: 17px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- SCROLL PROGRESS ---- */
+.scroll-progress {
+  position: fixed; top:0; left:0;
+  height: 3px;
+  background: var(--gradient);
+  z-index: 10001;
+  width: 0%;
+  transition: width 0.08s linear;
+}
+
+/* ---- GRAIN ---- */
+.grain {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+}
+
+/* ---- UTILS ---- */
+.container { max-width:1200px; margin:0 auto; padding:0 24px; }
+.container-wide { max-width:1400px; margin:0 auto; padding:0 24px; }
+
+.gradient-text {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.eyebrow-gradient {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-headline {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  margin-bottom: 24px;
+}
+
+.section-pad { padding: 120px 0; }
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gradient);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  white-space: nowrap;
+}
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(238,0,51,0.3), 0 4px 15px rgba(85,0,221,0.2);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+  font-size: 15px;
+  padding: 12px 0;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.btn-secondary:hover { color: #fff; }
+
+/* ---- REVEAL ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+}
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+/* ======================================
+   1. NAV
+   ====================================== */
+.nav {
+  position: fixed; top:0; left:0; right:0;
+  z-index: 1000;
+  padding: 18px 0;
+  transition: background 0.4s, backdrop-filter 0.4s, padding 0.4s, box-shadow 0.4s;
+}
+.nav.scrolled {
+  background: rgba(8,8,26,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 12px 0;
+  box-shadow: 0 1px 40px rgba(0,0,0,0.3);
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.nav-logo span { color: var(--red); }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.nav-links a:hover { color: #fff; }
+.nav-cta {
+  background: var(--gradient);
+  color: #fff !important;
+  padding: 10px 24px;
+  border-radius: var(--radius-btn);
+  font-weight: 600 !important;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.nav-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(238,0,51,0.3);
+  color: #fff !important;
+}
+
+@media (max-width: 809px) {
+  .nav-links { display: none; }
+  .nav-mobile-cta {
+    display: inline-flex;
+    background: var(--gradient);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: var(--radius-btn);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+  }
+}
+@media (min-width: 810px) {
+  .nav-mobile-cta { display: none; }
+}
+
+/* ======================================
+   2. HERO
+   ====================================== */
+.hero {
+  background: var(--bg-dark);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 140px 0 100px;
+}
+.hero-glow-red {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(238,0,51,0.15), transparent 70%);
+  top: -100px; left: -100px;
+  pointer-events: none;
+}
+.hero-glow-purple {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(85,0,221,0.12), transparent 70%);
+  bottom: -100px; right: -100px;
+  pointer-events: none;
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-content { position: relative; z-index: 2; }
+.hero-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 32px;
+}
+.hero-eyebrow span { color: var(--red); }
+.hero-headline {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 28px;
+}
+.hero-headline .line { display: block; }
+.hero-sub {
+  font-size: 17px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  margin-bottom: 40px;
+  max-width: 520px;
+}
+.hero-founders {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.founder-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.founder-avatar-z { background: var(--gradient); }
+.founder-avatar-s { background: var(--purple); }
+.hero-founder-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.5;
+}
+.hero-founder-text strong { color: rgba(255,255,255,0.7); font-weight: 600; }
+
+.hero-ctas { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+
+.hero-collage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.hero-collage img {
+  width: 100%;
+  border-radius: var(--radius-img);
+  object-fit: cover;
+}
+.hero-collage .img-tall { grid-row: span 2; height: 100%; }
+.hero-collage .img-short { height: 180px; }
+
+@media (max-width: 809px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .hero-collage { display: none; }
+  .hero { min-height: auto; padding: 140px 0 80px; }
+}
+
+/* ======================================
+   3. CLIENT TRUST STRIP
+   ====================================== */
+.trust-strip {
+  background: #fff;
+  padding: 48px 0;
+  border-bottom: 1px solid rgba(26,26,78,0.06);
+}
+.trust-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 32px 48px;
+}
+.trust-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(26,26,78,0.25);
+  flex-shrink: 0;
+}
+.trust-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(26,26,78,0.18);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ======================================
+   4. SERVICES
+   ====================================== */
+.services {
+  background: var(--bg-gray);
+  padding: 120px 0;
+}
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+.service-card {
+  background: #fff;
+  border: 1px solid rgba(26,26,78,0.06);
+  border-radius: var(--radius-card);
+  padding: 36px 32px;
+  transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.service-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(238,0,51,0.15);
+  box-shadow: 0 12px 40px rgba(26,26,78,0.06);
+}
+.service-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: block;
+}
+.service-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+  color: var(--navy);
+}
+.service-desc {
+  font-size: 15px;
+  color: var(--text-dark-muted);
+  line-height: 1.65;
+}
+
+@media (max-width: 809px) {
+  .services-grid { grid-template-columns: 1fr; }
+}
+
+/* ======================================
+   5. CREATIVE GALLERY
+   ====================================== */
+.gallery {
+  background: var(--bg-cream);
+  padding: 120px 0;
+}
+.gallery-videos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 48px;
+  margin-bottom: 24px;
+}
+.gallery-videos video {
+  width: 100%;
+  aspect-ratio: 9/16;
+  object-fit: cover;
+  border-radius: var(--radius-img);
+  background: #e0ddd8;
+}
+.gallery-bento {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 200px;
+  gap: 16px;
+}
+.gallery-bento img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-img);
+  transition: transform 0.5s ease;
+}
+.gallery-bento img:hover { transform: scale(1.02); }
+.gallery-bento .span-2 { grid-column: span 2; }
+.gallery-bento .tall { grid-row: span 2; }
+
+.gallery-caption {
+  font-size: 14px;
+  color: var(--text-dark-muted);
+  margin-top: 24px;
+  text-align: center;
+  font-style: italic;
+}
+
+@media (max-width: 809px) {
+  .gallery-videos { grid-template-columns: repeat(2, 1fr); }
+  .gallery-bento {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 160px;
+  }
+  .gallery-bento .span-2 { grid-column: span 1; }
+  .gallery-bento .tall { grid-row: span 1; }
+}
+
+/* ======================================
+   6. THE PROBLEM
+   ====================================== */
+.problem {
+  background: #fff;
+  padding: 120px 0;
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  margin-top: 56px;
+  margin-bottom: 56px;
+}
+.problem-item { position: relative; }
+.problem-number {
+  font-size: 120px;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  background: linear-gradient(180deg, rgba(26,26,78,0.06), rgba(26,26,78,0.02));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: absolute;
+  top: -20px;
+  left: -4px;
+  pointer-events: none;
+}
+.problem-text {
+  position: relative;
+  z-index: 1;
+  padding-top: 48px;
+}
+.problem-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  color: var(--navy);
+}
+.problem-desc {
+  font-size: 15px;
+  color: var(--text-dark-muted);
+  line-height: 1.7;
+}
+.problem-tagline {
+  text-align: center;
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--navy);
+}
+.problem-tagline span {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 809px) {
+  .problem-grid { grid-template-columns: 1fr; gap: 48px; }
+}
+
+/* ======================================
+   7. THE LOOP
+   ====================================== */
+.loop {
+  background: var(--bg-dark);
+  padding: 120px 0;
+  position: relative;
+  overflow: hidden;
+}
+.loop-glow-red {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(238,0,51,0.1), transparent 70%);
+  top: -150px; right: 10%;
+  pointer-events: none;
+}
+.loop-glow-purple {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(85,0,221,0.08), transparent 70%);
+  bottom: -150px; left: 10%;
+  pointer-events: none;
+}
+.loop .eyebrow { color: var(--text-muted); }
+.loop .section-headline { color: #fff; }
+.loop-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 56px;
+  position: relative;
+}
+.loop-step {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.loop-step-num {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 auto 24px;
+  position: relative;
+}
+.loop-step-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+.loop-step-desc {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 300px;
+  margin: 0 auto;
+}
+/* connector lines between steps */
+.loop-connector {
+  position: absolute;
+  top: 36px;
+  left: calc(33.33% + 36px);
+  width: calc(33.33% - 72px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--purple));
+  opacity: 0.3;
+  z-index: 0;
+}
+.loop-connector-2 {
+  left: calc(66.66% + 36px);
+  width: calc(33.33% - 72px);
+}
+
+@media (max-width: 809px) {
+  .loop-steps { grid-template-columns: 1fr; gap: 48px; }
+  .loop-connector, .loop-connector-2 { display: none; }
+}
+
+/* ======================================
+   8. RESULTS
+   ====================================== */
+.results {
+  background: var(--bg-dark-alt);
+  padding: 120px 0;
+  position: relative;
+}
+.results .eyebrow { color: var(--text-muted); }
+.results .section-headline { color: #fff; }
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+.result-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-card);
+  padding: 40px 36px;
+  transition: transform 0.4s, border-color 0.4s;
+}
+.result-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(238,0,51,0.2);
+}
+.result-card.featured {
+  grid-column: span 2;
+}
+.result-metric {
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.result-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.result-desc {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+@media (max-width: 809px) {
+  .results-grid { grid-template-columns: 1fr; }
+  .result-card.featured { grid-column: span 1; }
+}
+
+/* ======================================
+   9. ABOUT / TEAM
+   ====================================== */
+.team {
+  background: #fff;
+  padding: 120px 0;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-top: 48px;
+}
+.team-card {
+  background: var(--bg-gray);
+  border: 1px solid rgba(26,26,78,0.06);
+  border-radius: var(--radius-card);
+  padding: 48px 40px;
+  transition: transform 0.4s, border-color 0.4s;
+}
+.team-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(238,0,51,0.12);
+}
+.team-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 24px;
+}
+.team-avatar-z { background: var(--gradient); }
+.team-avatar-s { background: var(--purple); }
+.team-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+.team-role {
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+}
+.team-bio {
+  font-size: 15px;
+  color: var(--text-dark-muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 809px) {
+  .team-grid { grid-template-columns: 1fr; }
+}
+
+/* ======================================
+   10. PLATFORM STRIP
+   ====================================== */
+.platforms {
+  background: #fff;
+  padding: 56px 0;
+  border-top: 1px solid rgba(26,26,78,0.06);
+}
+.platform-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.platform-pill {
+  background: var(--bg-gray);
+  border: 1px solid rgba(26,26,78,0.06);
+  border-radius: 100px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark-muted);
+  white-space: nowrap;
+}
+
+/* ======================================
+   11. CTA
+   ====================================== */
+.cta-section {
+  background: var(--bg-dark);
+  padding: 100px 0 60px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-glow-red {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(238,0,51,0.1), transparent 70%);
+  top: -200px; left: 20%;
+  pointer-events: none;
+}
+.cta-glow-purple {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(85,0,221,0.08), transparent 70%);
+  bottom: -200px; right: 20%;
+  pointer-events: none;
+}
+.cta-content {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.cta-headline {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin-bottom: 20px;
+}
+.cta-sub {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 48px;
+}
+.calendly-wrap {
+  max-width: 700px;
+  margin: 0 auto 32px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-dark-alt);
+}
+.cta-footnote {
+  font-size: 14px;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+}
+
+/* ======================================
+   12. FOOTER
+   ====================================== */
+.footer-top {
+  background: var(--bg-dark);
+  padding: 64px 0 48px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer-top-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+.footer-brand {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.footer-brand span { color: var(--red); }
+.footer-tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.footer-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.footer-links a {
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.footer-links a:hover { color: #fff; }
+.footer-email a {
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+.footer-email a:hover { color: #fff; }
+
+.footer-bottom {
+  background: #050510;
+  padding: 20px 0;
+}
+.footer-bottom-inner {
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.25);
+}
+
+/* ---- MISC ---- */
+::selection {
+  background: rgba(238,0,51,0.2);
+  color: inherit;
+}
+</style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Grain Overlay -->
+<svg class="grain" xmlns="http://www.w3.org/2000/svg"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
+
+<!-- ======== 1. NAV ======== -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Skip the <span>Noise</span></a>
+    <ul class="nav-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#gallery">Work</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#team">About</a></li>
+      <li><a href="#cta" class="nav-cta">Book your free audit</a></li>
+    </ul>
+    <a href="#cta" class="nav-mobile-cta">Book your free audit</a>
+  </div>
+</nav>
+
+<!-- ======== 2. HERO ======== -->
+<section class="hero">
+  <div class="hero-glow-red"></div>
+  <div class="hero-glow-purple"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content reveal">
+        <div class="hero-eyebrow"><span>REDDIT CERTIFIED PARTNER</span> &nbsp;&middot;&nbsp; $20M+ AD SPEND MANAGED</div>
+        <h1 class="hero-headline">
+          <span class="line">We make the ads.</span>
+          <span class="line">We run the ads.</span>
+          <span class="line">We prove they work.</span>
+        </h1>
+        <p class="hero-sub">GroupM trained strategists. AI accelerated production. One team that owns the full loop from creative to conversion.</p>
+        <div class="hero-founders">
+          <div class="founder-avatar founder-avatar-z">Z</div>
+          <div class="founder-avatar founder-avatar-s">S</div>
+          <div class="hero-founder-text">
+            <strong>Zoha Ahmed</strong> &amp; <strong>Sonia Mohapatra</strong><br>
+            Ex-GroupM &middot; Adidas, Coca-Cola, Dell, Mars, Rogers
+          </div>
+        </div>
+        <div class="hero-ctas">
+          <a href="#cta" class="btn-primary">Book your free creative audit</a>
+          <a href="#gallery" class="btn-secondary">See our work &darr;</a>
+        </div>
+      </div>
+      <div class="hero-collage reveal">
+        <img src="./assets/lipstick-spill.jpg" alt="Lipstick creative" class="img-tall" style="object-fit:cover;">
+        <img src="./assets/handbag-street.png" alt="Handbag street shoot" class="img-short" style="object-fit:cover;">
+        <img src="./assets/lipstick-studio.jpg" alt="Studio creative" class="img-short" style="object-fit:cover;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 3. CLIENT TRUST STRIP ======== -->
+<div class="trust-strip">
+  <div class="container-wide">
+    <div class="trust-inner reveal">
+      <span class="trust-label">Trusted by</span>
+      <span class="trust-name">Adidas</span>
+      <span class="trust-name">Coca-Cola</span>
+      <span class="trust-name">Dell</span>
+      <span class="trust-name">Mars</span>
+      <span class="trust-name">Rogers</span>
+      <span class="trust-name">Restream</span>
+      <span class="trust-name">Flare.io</span>
+      <span class="trust-name">SimpleBooth</span>
+      <span class="trust-name">Brokk.ai</span>
+      <span class="trust-name">Art of Living</span>
+      <span class="trust-name">TCF</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 4. SERVICES ======== -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow eyebrow-gradient">WHAT WE DO</p>
+      <h2 class="section-headline">Full stack creative and media.</h2>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <span class="service-icon">&#127912;</span>
+        <h3 class="service-title">Performance Creative</h3>
+        <p class="service-desc">Static, video, UGC, 3D. Every format your campaigns need. Directed by strategists who read your data.</p>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">&#128200;</span>
+        <h3 class="service-title">Media Buying</h3>
+        <p class="service-desc">Meta, Google, Reddit, LinkedIn, TikTok, Pinterest. Cross-channel campaigns managed by ex-GroupM buyers.</p>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">&#128161;</span>
+        <h3 class="service-title">Creative Strategy</h3>
+        <p class="service-desc">We audit your ad library, find the gaps, build your test roadmap, and tell you exactly what to produce next.</p>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">&#127909;</span>
+        <h3 class="service-title">UGC Production</h3>
+        <p class="service-desc">Creator briefs, filming direction, editing. Performance UGC that feels native to every platform.</p>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">&#9889;</span>
+        <h3 class="service-title">3D &amp; Animation</h3>
+        <p class="service-desc">Product renders, animated ads, motion graphics. AI tools handle volume. Humans direct quality.</p>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">&#128187;</span>
+        <h3 class="service-title">Landing Pages</h3>
+        <p class="service-desc">Conversion optimized pages that match your ad creative. Built fast. Tested faster.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 5. CREATIVE GALLERY ======== -->
+<section class="gallery" id="gallery">
+  <div class="container-wide">
+    <div class="reveal">
+      <p class="eyebrow eyebrow-gradient">THE WORK</p>
+      <h2 class="section-headline">Creative that converts. Across every format.</h2>
+    </div>
+    <div class="gallery-videos reveal">
+      <video autoplay muted loop playsinline><source src="./assets/ad-chair.mp4" type="video/mp4"></video>
+      <video autoplay muted loop playsinline><source src="./assets/ad-angel.mp4" type="video/mp4"></video>
+      <video autoplay muted loop playsinline><source src="./assets/ad-dog.mp4" type="video/mp4"></video>
+      <video autoplay muted loop playsinline><source src="./assets/ad-mech.mp4" type="video/mp4"></video>
+    </div>
+    <div class="gallery-bento reveal">
+      <img src="./assets/lipstick-spill.jpg" alt="Lipstick creative" class="span-2">
+      <img src="./assets/handbag-fashion.jpg" alt="Handbag fashion shoot">
+      <img src="./assets/tcf-spiritual.jpg" alt="TCF spiritual campaign">
+      <img src="./assets/lipstick-closeup.png" alt="Lipstick closeup" class="tall">
+      <img src="./assets/handbag-walk.jpg" alt="Handbag walk shoot">
+      <img src="./assets/tcf-trust.jpg" alt="TCF trust campaign">
+      <img src="./assets/lipstick-hands.jpg" alt="Lipstick hands creative" class="span-2">
+      <img src="./assets/tcf-trust2.jpg" alt="TCF campaign">
+    </div>
+    <p class="gallery-caption reveal">Product shoots. UGC. 3D animation. Performance static. All directed by strategists who run the campaigns.</p>
+  </div>
+</section>
+
+<!-- ======== 6. THE PROBLEM ======== -->
+<section class="problem">
+  <div class="container">
+    <div class="reveal">
+      <h2 class="section-headline" style="text-align:center;">Most agencies are half the picture.</h2>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-item reveal">
+        <span class="problem-number">1</span>
+        <div class="problem-text">
+          <h3 class="problem-title">Creative agencies don't buy media.</h3>
+          <p class="problem-desc">They make beautiful ads with no idea what performs. No feedback loop. No data. Just vibes and a mood board.</p>
+        </div>
+      </div>
+      <div class="problem-item reveal">
+        <span class="problem-number">2</span>
+        <div class="problem-text">
+          <h3 class="problem-title">Media agencies don't make creative.</h3>
+          <p class="problem-desc">They buy traffic and send you a spreadsheet. When performance drops, they blame the creative. Which they didn't make.</p>
+        </div>
+      </div>
+      <div class="problem-item reveal">
+        <span class="problem-number">3</span>
+        <div class="problem-text">
+          <h3 class="problem-title">The loop is broken.</h3>
+          <p class="problem-desc">Two teams. Two timelines. Zero alignment. You're paying for coordination overhead instead of performance.</p>
+        </div>
+      </div>
+    </div>
+    <p class="problem-tagline reveal">We do both. <span>One team. One loop.</span></p>
+  </div>
+</section>
+
+<!-- ======== 7. THE LOOP ======== -->
+<section class="loop">
+  <div class="loop-glow-red"></div>
+  <div class="loop-glow-purple"></div>
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow" style="color:var(--text-muted);">HOW IT WORKS</p>
+      <h2 class="section-headline" style="color:#fff;">One team. One loop.</h2>
+    </div>
+    <div class="loop-steps">
+      <div class="loop-connector"></div>
+      <div class="loop-connector loop-connector-2"></div>
+      <div class="loop-step reveal">
+        <div class="loop-step-num">1</div>
+        <h3 class="loop-step-title">Audit</h3>
+        <p class="loop-step-desc">We review your ad library across every platform. We find what's working, what's missing, and where the biggest creative gaps are hiding revenue.</p>
+      </div>
+      <div class="loop-step reveal">
+        <div class="loop-step-num">2</div>
+        <h3 class="loop-step-title">Produce</h3>
+        <p class="loop-step-desc">We build the creative your campaigns actually need. Static, video, UGC, 3D. Every format directed by the same team running your media.</p>
+      </div>
+      <div class="loop-step reveal">
+        <div class="loop-step-num">3</div>
+        <h3 class="loop-step-title">Measure</h3>
+        <p class="loop-step-desc">We run the ads, read the data, and feed performance insights back into the next round of creative. The loop closes. Results compound.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 8. RESULTS ======== -->
+<section class="results" id="results">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow" style="color:var(--text-muted);">REAL RESULTS</p>
+      <h2 class="section-headline" style="color:#fff;">Numbers that matter.</h2>
+    </div>
+    <div class="results-grid">
+      <div class="result-card featured reveal">
+        <div class="result-metric">75 Qualified Leads</div>
+        <div class="result-label">Cybersecurity SaaS</div>
+        <p class="result-desc">Generated 75 qualified leads in 3 months through Reddit and LinkedIn. Turned a brand new channel into a top 3 pipeline source.</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="result-metric">10% CAC Reduction</div>
+        <div class="result-label">Restream</div>
+        <p class="result-desc">$30-50k per month in spend. 10% year over year CAC reduction while scaling from US into EU, Canada, and Australia.</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="result-metric">50% Lower CPL</div>
+        <div class="result-label">Flare.io</div>
+        <p class="result-desc">Cut cost per lead in half. Drove a 30% increase in branded searches. Turned Reddit into their highest intent acquisition channel.</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="result-metric">$100 CPL at Scale</div>
+        <div class="result-label">B2B SaaS</div>
+        <p class="result-desc">60 qualified leads in 3 months at $100 CPL. Full funnel from top of funnel awareness to bottom of funnel demo bookings.</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="result-metric">3-5x ROAS</div>
+        <div class="result-label">DTC Brands</div>
+        <p class="result-desc">Consistent 3 to 5x return on ad spend across Meta and Google for direct to consumer brands. Creative and media, same team.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 9. TEAM ======== -->
+<section class="team" id="team">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow eyebrow-gradient">THE TEAM</p>
+      <h2 class="section-headline">Ex-GroupM. Reddit Certified.<br>Built for performance.</h2>
+    </div>
+    <div class="team-grid">
+      <div class="team-card reveal">
+        <div class="team-avatar team-avatar-z">Z</div>
+        <h3 class="team-name">Zoha Ahmed</h3>
+        <p class="team-role">Co-Founder &amp; Head of Strategy</p>
+        <p class="team-bio">Ex-GroupM. Managed campaigns for Adidas, Dell, Mars, and Aldo. Reddit Certified Partner. Built Skip the Noise to close the gap between creative and media.</p>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar team-avatar-s">S</div>
+        <h3 class="team-name">Sonia Mohapatra</h3>
+        <p class="team-role">Co-Founder &amp; Head of Media</p>
+        <p class="team-bio">Ex-GroupM. Led media strategy for Coca-Cola and Rogers. Brings enterprise media buying discipline to growth stage brands.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== 10. PLATFORM STRIP ======== -->
+<div class="platforms">
+  <div class="container-wide">
+    <div class="platform-inner reveal">
+      <span class="platform-pill">Meta</span>
+      <span class="platform-pill">Google</span>
+      <span class="platform-pill">Reddit</span>
+      <span class="platform-pill">LinkedIn</span>
+      <span class="platform-pill">TikTok</span>
+      <span class="platform-pill">Pinterest</span>
+      <span class="platform-pill">Snapchat</span>
+      <span class="platform-pill">X</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 11. CTA ======== -->
+<section class="cta-section" id="cta">
+  <div class="cta-glow-red"></div>
+  <div class="cta-glow-purple"></div>
+  <div class="container">
+    <div class="cta-content reveal">
+      <h2 class="cta-headline">Stop guessing.<br>Start testing.</h2>
+      <p class="cta-sub">Book a free creative audit. We'll review your ad library across every platform and show you exactly where you're leaving pipeline on the table.</p>
+    </div>
+    <div class="calendly-wrap reveal">
+      <div class="calendly-inline-widget" data-url="https://calendly.com/skipthenoisemedia/creative-audit?hide_gdpr_banner=1&background_color=0e0e28&text_color=ffffff&primary_color=ee0033" style="min-width:320px;height:700px;"></div>
+    </div>
+    <p class="cta-footnote reveal">No retainer. No commitment. 30 minutes.</p>
+  </div>
+</section>
+
+<!-- ======== 12. FOOTER ======== -->
+<footer>
+  <div class="footer-top">
+    <div class="container">
+      <div class="footer-top-inner">
+        <div>
+          <div class="footer-brand">Skip the <span>Noise</span> Media</div>
+          <p class="footer-tagline">Performance creative + media buying. One team.</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#gallery">Work</a></li>
+          <li><a href="#results">Results</a></li>
+          <li><a href="#team">About</a></li>
+        </ul>
+        <div class="footer-email">
+          <a href="mailto:zoha@skipthenoisemedia.com">zoha@skipthenoisemedia.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container">
+      <div class="footer-bottom-inner">&copy; 2026 Skip the Noise Media &middot; Reddit Certified Partner</div>
+    </div>
+  </div>
+</footer>
+
+<!-- Calendly Widget JS -->
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+
+<script>
+// ---- Scroll Progress Bar ----
+const progressBar = document.getElementById('scrollProgress');
+window.addEventListener('scroll', () => {
+  const scrollTop = document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  progressBar.style.width = (scrollTop / scrollHeight * 100) + '%';
+});
+
+// ---- Nav glass blur on scroll ----
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ---- IntersectionObserver reveal ----
+const reveals = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
